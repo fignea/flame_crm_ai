@@ -1,0 +1,581 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuarios
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  profile   String   @default("user") // admin, user, manager
+  avatar    String?
+  isActive  Boolean  @default(true)
+  isOnline  Boolean  @default(false)
+  lastSeen  DateTime @default(now())
+  
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  tickets    Ticket[]
+  messages   Message[]
+  conversations Conversation[]
+  schedules  Schedule[]
+  campaigns  Campaign[]
+  
+  // Configuraciones del usuario
+  userSettings UserSettings?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// Modelo de Empresas
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  plan        String   @default("free") // free, basic, pro, enterprise
+  status      String   @default("active") // active, inactive, suspended
+  dueDate     DateTime?
+  recurrence  String?  // monthly, yearly
+  
+  // Configuraciones
+  settings CompanySettings?
+  
+  // Relaciones
+  users     User[]
+  connections Connection[]
+  queues    Queue[]
+  contacts  Contact[]
+  tags      Tag[]
+  legacyTags LegacyTag[] // Para mantener la relación con las etiquetas antiguas
+  campaigns Campaign[]
+  botFlows BotFlow[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
+}
+
+// Modelo de Conexiones (reemplaza el modelo Whatsapp)
+model Connection {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // whatsapp_web, whatsapp_business, instagram, facebook
+  status      String   @default("DISCONNECTED") // CONNECTED, DISCONNECTED, CONNECTING, ERROR
+  session     String?  @unique // Para WhatsApp
+  qrcode      String?  // Para WhatsApp Web
+  accessToken String?  // Para Instagram/Facebook
+  retries     Int      @default(0)
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  
+  // Configuraciones específicas por plataforma
+  webhookByEvents Boolean @default(false)
+  webhookUrl      String?
+  
+  // Configuraciones adicionales
+  settings Json? // Configuraciones específicas por plataforma
+  
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  tickets  Ticket[]
+  messages Message[]
+  conversations Conversation[]
+  autoMessageSchedules AutoMessageSchedule[]
+  botFlows BotFlow[]
+  botInteractions BotInteraction[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("connections")
+}
+
+// Modelo de Contactos
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  number    String
+  email     String?
+  avatar    String?
+  isGroup   Boolean  @default(false)
+  isBlocked Boolean  @default(false)
+  
+  // Campos adicionales para CRM
+  companyName String?
+  position    String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+  birthday    DateTime?
+  status      String?   // activo, inactivo
+  customerType String?  // lead, cliente, proveedor, etc.
+  socials     Json?     // { linkedin, facebook, instagram, x }
+  notes       String?
+  
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  tickets    Ticket[]
+  messages   Message[]
+  conversations Conversation[]
+  schedules  Schedule[]
+  campaignContacts CampaignContact[]
+  tags       Tag[] @relation("ContactTags")
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([number, companyId])
+  @@map("contacts")
+}
+
+// Modelo de Tickets
+model Ticket {
+  id          String   @id @default(cuid())
+  status      String   @default("open") // open, pending, closed, resolved
+  priority    String   @default("medium") // low, medium, high, urgent
+  category    String?
+  subject     String?
+  lastMessage String?
+  unreadMessages Int   @default(0)
+  
+  // Campos para Kanban
+  kanbanColumn String? // backlog, todo, in-progress, done
+  kanbanOrder  Int     @default(0)
+  
+  // Relaciones
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  queueId String?
+  queue   Queue? @relation(fields: [queueId], references: [id], onDelete: SetNull)
+  
+  messages Message[]
+  tags     Tag[] @relation("TicketTags")
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tickets")
+}
+
+// Modelo de Conversaciones
+model Conversation {
+  id        String   @id @default(cuid())
+  unreadCount Int    @default(0)
+  
+  // Relaciones
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  lastMessageId String?
+  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+  
+  messages Message[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contactId, connectionId])
+  @@map("conversations")
+}
+
+// Modelo de Mensajes
+model Message {
+  id        String   @id @default(cuid())
+  content   String   // Cambiado de 'body' a 'content' para consistencia
+  fromMe    Boolean  @default(false)
+  status    String   @default("sent") // sent, delivered, read, failed
+  mediaType String?  // image, audio, video, document
+  mediaUrl  String?
+  quotedMsg String?
+  reaction  String?  // Campo para guardar la reacción (emoji)
+  timestamp DateTime @default(now())
+  
+  // Relaciones
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Relación para último mensaje
+  lastMessageConversations Conversation[] @relation("LastMessage")
+  
+  // Relaciones con bot
+  botInteractions BotInteraction[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("messages")
+}
+
+// Modelo de Filas
+model Queue {
+  id          String   @id @default(cuid())
+  name        String
+  color       String   @default("#000000")
+  greetingMessage String?
+  outOfHoursMessage String?
+  
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  tickets Ticket[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("queues")
+}
+
+// El modelo Tag original se renombrará a LegacyTag para migración.
+// La nueva estructura de Atributo-Valor será implementada con el nuevo modelo Tag.
+model LegacyTag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#000000")
+  
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, companyId])
+  @@map("legacy_tags")
+}
+
+// Nuevo Modelo de Tags para Atributo-Valor
+model Tag {
+  id        String   @id @default(cuid())
+  attribute String   // La "llave", ej: "Prioridad"
+  value     String   // El "valor", ej: "Alta"
+  color     String   @default("#007BFF")
+
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Relaciones con tickets y contactos
+  tickets   Ticket[] @relation("TicketTags")
+  contacts  Contact[] @relation("ContactTags")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([attribute, value, companyId])
+  @@map("tags")
+}
+
+// Los modelos ContactTag y TicketTag ya no son necesarios
+// model ContactTag {
+//   contactId String
+//   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+//   tagId     String
+//   tag       Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+// 
+//   @@id([contactId, tagId])
+//   @@map("contact_tags")
+// }
+// 
+// model TicketTag {
+//   ticketId String
+//   ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+//   tagId    String
+//   tag      Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+// 
+//   @@id([ticketId, tagId])
+//   @@map("ticket_tags")
+// }
+
+// Modelo de Campañas
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  status      String   @default("draft") // draft, active, paused, completed
+  message     String
+  scheduledAt DateTime?
+  sentCount   Int      @default(0)
+  errorCount  Int      @default(0)
+  
+  // Relaciones
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  contacts CampaignContact[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("campaigns")
+}
+
+// Modelo de relación Campaign-Contact
+model CampaignContact {
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  status    String @default("pending") // pending, sent, failed
+  sentAt    DateTime?
+  errorMsg  String?
+  
+  @@id([campaignId, contactId])
+  @@map("campaign_contacts")
+}
+
+// Modelo de Agendamientos
+model Schedule {
+  id          String   @id @default(cuid())
+  body        String
+  sendAt      DateTime
+  sentAt      DateTime?
+  status      String   @default("pending") // pending, sent, failed
+  
+  // Relaciones
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("schedules")
+}
+
+// Modelo de Programaciones Automáticas por Conexión
+model AutoMessageSchedule {
+  id           String   @id @default(cuid())
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  message      String
+  timeRanges   Json     // [{ from: "09:00", to: "12:00" }, ...]
+  daysOfWeek   Json     // [1,2,3,4,5]
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("auto_message_schedules")
+}
+
+// Modelo de Flujos de Bot
+model BotFlow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0) // Para ordenar flujos
+  
+  // Configuraciones
+  alwaysRespond Boolean @default(false) // Si es true, responde siempre sin importar mensajes previos
+  stopOnMatch   Boolean @default(true)  // Si es true, se detiene al encontrar la primera coincidencia
+  
+  // Relaciones
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Relaciones con condiciones y respuestas
+  conditions BotCondition[]
+  interactions BotInteraction[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bot_flows")
+}
+
+// Modelo de Condiciones del Bot
+model BotCondition {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // exact_match, contains, starts_with, ends_with, regex, menu_option
+  value     String   // El valor a comparar
+  operator  String   @default("equals") // equals, not_equals, contains, not_contains
+  
+  // Configuraciones adicionales
+  caseSensitive Boolean @default(false)
+  regexFlags    String? // Para expresiones regulares
+  
+  // Relaciones
+  flowId String
+  flow   BotFlow @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  
+  // Relaciones con respuestas
+  responses BotResponse[]
+  interactions BotInteraction[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bot_conditions")
+}
+
+// Modelo de Respuestas del Bot
+model BotResponse {
+  id          String   @id @default(cuid())
+  message     String
+  responseType String  @default("text") // text, image, video, audio, document, location, contact
+  
+  // Para respuestas multimedia
+  mediaUrl    String?
+  mediaCaption String?
+  
+  // Configuraciones
+  delay       Int      @default(0) // Delay en milisegundos antes de enviar
+  order       Int      @default(0) // Orden de envío
+  
+  // Relaciones
+  conditionId String
+  condition   BotCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bot_responses")
+}
+
+// Modelo de Historial de Interacciones del Bot
+model BotInteraction {
+  id        String   @id @default(cuid())
+  
+  // Información del mensaje
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  // Relaciones
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  // Información del flujo ejecutado
+  flowId String?
+  flow   BotFlow? @relation(fields: [flowId], references: [id], onDelete: SetNull)
+  
+  conditionId String?
+  condition   BotCondition? @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  
+  // Resultado
+  matched    Boolean @default(false)
+  responsesSent Int  @default(0)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@map("bot_interactions")
+}
+
+// Modelo de Configuraciones de Usuario
+model UserSettings {
+  id                String @id @default(cuid())
+  userId            String @unique
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Configuraciones de notificaciones
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  soundNotifications Boolean @default(true)
+  
+  // Configuraciones de tema
+  theme             String @default("light") // light, dark, auto
+  language          String @default("es") // es, en, pt
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// Modelo de Configuraciones de Empresa
+model CompanySettings {
+  id                String @id @default(cuid())
+  companyId         String @unique
+  company           Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Configuraciones de WhatsApp
+  transferTicket    Boolean @default(true)
+  closeTicket       Boolean @default(true)
+  useNPS            Boolean @default(false)
+  sendGreetingAccepted Boolean @default(true)
+  sendGreetingRefused Boolean @default(true)
+  
+  // Configuraciones de horario
+  workingHours      String? // JSON string: { start: "09:00", end: "18:00", days: [1,2,3,4,5] }
+  outOfHoursMessage String?
+  
+  // Configuraciones de chatbot
+  chatbotEnabled    Boolean @default(false)
+  chatbotMessage    String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("company_settings")
+} 
