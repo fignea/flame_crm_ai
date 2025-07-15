@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Material Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+        
+        * {
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .material-bg {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .material-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .material-header {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .material-sidebar {
+            background: #ffffff;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 0 16px 16px 0;
+        }
+        
+        .material-nav {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item-material {
+            border-radius: 12px;
+            margin: 4px 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item-material::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 12px;
+        }
+        
+        .nav-item-material:hover::before {
+            opacity: 0.1;
+        }
+        
+        .nav-item-material:hover {
+            transform: translateX(8px);
+        }
+        
+        .nav-item-material.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-item-material.active::before {
+            opacity: 0;
+        }
+        
+        .material-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .material-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .material-button:hover::before {
+            left: 100%;
+        }
+        
+        .material-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .material-progress {
+            background: #f1f5f9;
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .material-progress-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .material-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+        
+        .material-status {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+        
+        .material-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            margin: 16px 0;
+        }
+        
+        .material-activity {
+            padding: 16px;
+            border-radius: 12px;
+            margin: 8px 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+        
+        .material-activity:hover {
+            background: #f8fafc;
+            transform: translateX(8px);
+        }
+        
+        .material-activity.contact { border-left-color: #3b82f6; }
+        .material-activity.ticket { border-left-color: #f59e0b; }
+        .material-activity.campaign { border-left-color: #8b5cf6; }
+        .material-activity.conversation { border-left-color: #10b981; }
+        .material-activity.bot { border-left-color: #ef4444; }
+        
+        .material-metric {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .material-metric:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .material-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .material-icon.blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .material-icon.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .material-icon.yellow { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .material-icon.purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .material-icon.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .material-icon.orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+        
+        .material-title {
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .material-text {
+            color: #64748b;
+        }
+        
+        .material-text-primary {
+            color: #1e293b;
+        }
+        
+        .material-text-secondary {
+            color: #64748b;
+        }
+        
+        .material-elevation-1 {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+        
+        .material-elevation-2 {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+        }
+        
+        .material-elevation-3 {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+        
+        .material-elevation-4 {
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+        }
+        
+        .material-elevation-5 {
+            box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+        }
+        
+        .material-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .material-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .material-ripple:active::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .material-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .material-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body class="material-bg min-h-screen">
+    <!-- Material Header -->
+    <header class="material-header sticky top-0 z-50 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="material-icon blue">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h1 class="material-title text-xl">Flame AI CRM</h1>
+                    <p class="material-text text-sm">Material Design Edition</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
+                    <button class="material-button p-3 rounded-full material-ripple relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute -top-2 -right-2 material-badge">3</span>
+                    </button>
+                    <button class="material-button p-3 rounded-full material-ripple relative">
+                        <i class="fas fa-envelope"></i>
+                        <span class="absolute -top-2 -right-2 material-badge">5</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="material-text-primary text-sm font-medium">María González</p>
+                        <p class="material-text-secondary text-xs">Administradora</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">MG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Material Sidebar -->
+        <aside class="material-sidebar w-80 min-h-screen p-6">
+            <!-- User Profile -->
+            <div class="material-card p-6 mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">MG</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="material-text-primary font-semibold">María González</h3>
+                        <p class="material-text-secondary text-sm">Administradora</p>
+                        <p class="material-text-secondary text-xs">ID: FLM-2024-001</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="material-card p-6 mb-6">
+                <h3 class="material-text-primary font-semibold mb-4">Acciones Rápidas</h3>
+                <div class="space-y-3">
+                    <button class="material-button w-full py-3 px-4 text-sm material-ripple">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Contacto
+                    </button>
+                    <button class="material-button w-full py-3 px-4 text-sm material-ripple">
+                        <i class="fas fa-comment mr-2"></i>Nueva Conversación
+                    </button>
+                    <button class="material-button w-full py-3 px-4 text-sm material-ripple">
+                        <i class="fas fa-ticket-alt mr-2"></i>Crear Ticket
+                    </button>
+                </div>
+            </div>
+
+            <div class="material-divider"></div>
+
+            <!-- Navigation -->
+            <nav class="space-y-4">
+                <div class="material-card p-4">
+                    <h3 class="material-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Principal</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-material active flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span class="flex-1">Dashboard</span>
+                            <span class="material-status">Live</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-users mr-3"></i>
+                            <span class="flex-1">Contactos</span>
+                            <span class="material-badge">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-comments mr-3"></i>
+                            <span class="flex-1">Conversaciones</span>
+                            <span class="material-badge">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="material-card p-4">
+                    <h3 class="material-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Marketing</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-bullhorn mr-3"></i>
+                            <span class="flex-1">Campañas</span>
+                            <span class="material-badge">5</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-bolt mr-3"></i>
+                            <span class="flex-1">Mensajes Rápidos</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-calendar mr-3"></i>
+                            <span class="flex-1">Programaciones</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="material-card p-4">
+                    <h3 class="material-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Automatización</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-robot mr-3"></i>
+                            <span class="flex-1">Flujos de Bot</span>
+                            <span class="material-badge">12</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-list-ol mr-3"></i>
+                            <span class="flex-1">Colas</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="material-card p-4">
+                    <h3 class="material-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Administración</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-user-cog mr-3"></i>
+                            <span class="flex-1">Usuarios</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span class="flex-1">Configuración</span>
+                        </a>
+                        <a href="#" class="nav-item-material flex items-center px-4 py-3 text-sm material-ripple">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span class="flex-1">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="material-card p-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="material-title text-3xl mb-2">Dashboard</h1>
+                        <p class="material-text">Bienvenido de vuelta, María. Aquí tienes un resumen de tu actividad.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="material-text-secondary text-sm">Sesión Activa</div>
+                        <div class="material-text-primary text-lg font-bold">2h 34m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="material-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="material-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="material-text-secondary text-xs">Estado</div>
+                            <div class="material-status">Online</div>
+                        </div>
+                    </div>
+                    <h3 class="material-text-primary text-3xl font-bold mb-2">1,247</h3>
+                    <p class="material-text-secondary text-sm mb-4">Contactos Totales</p>
+                    <div class="material-progress">
+                        <div class="material-progress-fill bg-gradient-to-r from-blue-500 to-blue-600" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+12%</span>
+                        <span class="material-text-secondary">este mes</span>
+                    </div>
+                </div>
+
+                <div class="material-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="material-icon green">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="material-text-secondary text-xs">Estado</div>
+                            <div class="material-status">Activas</div>
+                        </div>
+                    </div>
+                    <h3 class="material-text-primary text-3xl font-bold mb-2">24</h3>
+                    <p class="material-text-secondary text-sm mb-4">Conversaciones Activas</p>
+                    <div class="material-progress">
+                        <div class="material-progress-fill bg-gradient-to-r from-green-500 to-green-600" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+8%</span>
+                        <span class="material-text-secondary">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="material-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="material-icon yellow">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="material-text-secondary text-xs">Estado</div>
+                            <div class="material-status">Pendientes</div>
+                        </div>
+                    </div>
+                    <h3 class="material-text-primary text-3xl font-bold mb-2">8</h3>
+                    <p class="material-text-secondary text-sm mb-4">Tickets Abiertos</p>
+                    <div class="material-progress">
+                        <div class="material-progress-fill bg-gradient-to-r from-yellow-500 to-yellow-600" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-red-600 font-semibold">-3%</span>
+                        <span class="material-text-secondary">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="material-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="material-icon purple">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="material-text-secondary text-xs">Estado</div>
+                            <div class="material-status">Excelente</div>
+                        </div>
+                    </div>
+                    <h3 class="material-text-primary text-3xl font-bold mb-2">94%</h3>
+                    <p class="material-text-secondary text-sm mb-4">Tasa de Respuesta</p>
+                    <div class="material-progress">
+                        <div class="material-progress-fill bg-gradient-to-r from-purple-500 to-purple-600" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+2%</span>
+                        <span class="material-text-secondary">este mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- System Metrics -->
+                <div class="material-card p-8">
+                    <h3 class="material-text-primary text-lg font-semibold mb-6 flex items-center">
+                        <i class="fas fa-server text-blue-500 mr-3"></i>
+                        Métricas del Sistema
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="p-6 bg-gray-50 rounded-12">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="material-text-primary text-sm font-medium">Uso de CPU</span>
+                                <span class="text-blue-600 font-semibold">67%</span>
+                            </div>
+                            <div class="material-progress h-4">
+                                <div class="material-progress-fill bg-gradient-to-r from-blue-500 to-blue-600" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 bg-gray-50 rounded-12">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="material-text-primary text-sm font-medium">Uso de Memoria</span>
+                                <span class="text-blue-600 font-semibold">42%</span>
+                            </div>
+                            <div class="material-progress h-4">
+                                <div class="material-progress-fill bg-gradient-to-r from-blue-500 to-blue-600" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 bg-gray-50 rounded-12">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="material-text-primary text-sm font-medium">Carga de Red</span>
+                                <span class="text-blue-600 font-semibold">23%</span>
+                            </div>
+                            <div class="material-progress h-4">
+                                <div class="material-progress-fill bg-gradient-to-r from-blue-500 to-blue-600" style="width: 23%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 bg-gray-50 rounded-12">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="material-text-primary text-sm font-medium">Procesamiento IA</span>
+                                <span class="text-blue-600 font-semibold">89%</span>
+                            </div>
+                            <div class="material-progress h-4">
+                                <div class="material-progress-fill bg-gradient-to-r from-blue-500 to-blue-600" style="width: 89%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="material-card p-8">
+                    <h3 class="material-text-primary text-lg font-semibold mb-6 flex items-center">
+                        <i class="fas fa-broadcast-tower text-green-500 mr-3"></i>
+                        Actividad Reciente
+                    </h3>
+                    <div class="space-y-4 max-h-80 overflow-y-auto">
+                        <div class="material-activity contact">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="material-text-primary text-sm font-medium">Nuevo contacto agregado</p>
+                                    <p class="material-text-secondary text-sm">Juan Pérez - hace 2 minutos</p>
+                                    <p class="material-text-secondary text-xs">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="material-activity ticket">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="material-text-primary text-sm font-medium">Ticket resuelto</p>
+                                    <p class="material-text-secondary text-sm">#TKT-2024-001 - hace 5 minutos</p>
+                                    <p class="material-text-secondary text-xs">Respuesta IA: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="material-activity campaign">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="material-text-primary text-sm font-medium">Campaña ejecutada</p>
+                                    <p class="material-text-secondary text-sm">Promoción de verano - hace 12 minutos</p>
+                                    <p class="material-text-secondary text-xs">Enviados: 1,247 | Abiertos: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="material-activity conversation">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="material-text-primary text-sm font-medium">Nueva conversación</p>
+                                    <p class="material-text-secondary text-sm">María López - hace 15 minutos</p>
+                                    <p class="material-text-secondary text-xs">Canal: WhatsApp | Prioridad: Alta</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="material-activity bot">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="material-text-primary text-sm font-medium">Flujo de bot completado</p>
+                                    <p class="material-text-secondary text-sm">Onboarding - hace 20 minutos</p>
+                                    <p class="material-text-secondary text-xs">Tiempo promedio: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="material-fab material-ripple">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Material interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-material');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add ripple effect to all buttons
+            const buttons = document.querySelectorAll('.material-ripple');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

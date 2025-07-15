@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Brutalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .brutalist-bg {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        .brutalist-card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            box-shadow: 8px 8px 0px #000000;
+            transition: all 0.2s ease;
+        }
+        
+        .brutalist-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px #000000;
+        }
+        
+        .brutalist-header {
+            background: #ffffff;
+            border-bottom: 3px solid #000000;
+            box-shadow: 0 4px 0px #000000;
+        }
+        
+        .brutalist-sidebar {
+            background: #ffffff;
+            border-right: 3px solid #000000;
+            box-shadow: 4px 0 0px #000000;
+        }
+        
+        .brutalist-nav {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0;
+        }
+        
+        .nav-item-brutalist {
+            border-bottom: 2px solid #000000;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .nav-item-brutalist:last-child {
+            border-bottom: none;
+        }
+        
+        .nav-item-brutalist:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateX(8px);
+        }
+        
+        .nav-item-brutalist.active {
+            background: #000000;
+            color: #ffffff;
+            border-left: 8px solid #ff0000;
+        }
+        
+        .brutalist-button {
+            background: #ffffff;
+            border: 3px solid #000000;
+            color: #000000;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .brutalist-button:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px #ff0000;
+        }
+        
+        .brutalist-button:active {
+            transform: translate(0px, 0px);
+            box-shadow: 2px 2px 0px #ff0000;
+        }
+        
+        .brutalist-progress {
+            background: #ffffff;
+            border: 2px solid #000000;
+            height: 20px;
+            overflow: hidden;
+        }
+        
+        .brutalist-progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            border-right: 2px solid #000000;
+        }
+        
+        .brutalist-badge {
+            background: #ff0000;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border: 2px solid #000000;
+            text-transform: uppercase;
+        }
+        
+        .brutalist-status {
+            background: #00ff00;
+            color: #000000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border: 2px solid #000000;
+            text-transform: uppercase;
+        }
+        
+        .brutalist-divider {
+            height: 3px;
+            background: #000000;
+            margin: 20px 0;
+        }
+        
+        .brutalist-activity {
+            padding: 16px;
+            border: 2px solid #000000;
+            margin: 8px 0;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            position: relative;
+        }
+        
+        .brutalist-activity::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: #000000;
+        }
+        
+        .brutalist-activity:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateX(8px);
+        }
+        
+        .brutalist-activity.contact::before { background: #0000ff; }
+        .brutalist-activity.ticket::before { background: #ffaa00; }
+        .brutalist-activity.campaign::before { background: #ff00ff; }
+        .brutalist-activity.conversation::before { background: #00ff00; }
+        .brutalist-activity.bot::before { background: #ff0000; }
+        
+        .brutalist-metric {
+            background: #ffffff;
+            border: 3px solid #000000;
+            padding: 24px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .brutalist-metric:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #ff0000;
+        }
+        
+        .brutalist-icon {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 32px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .brutalist-icon:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: rotate(5deg);
+        }
+        
+        .brutalist-icon.blue { border-color: #0000ff; }
+        .brutalist-icon.green { border-color: #00ff00; }
+        .brutalist-icon.yellow { border-color: #ffaa00; }
+        .brutalist-icon.purple { border-color: #ff00ff; }
+        .brutalist-icon.red { border-color: #ff0000; }
+        .brutalist-icon.orange { border-color: #ff6600; }
+        
+        .brutalist-title {
+            font-family: 'Space Mono', monospace;
+            font-weight: 900;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .brutalist-text {
+            color: #000000;
+            font-weight: 500;
+        }
+        
+        .brutalist-text-primary {
+            color: #000000;
+            font-weight: 700;
+        }
+        
+        .brutalist-text-secondary {
+            color: #666666;
+            font-weight: 500;
+        }
+        
+        .brutalist-input {
+            background: #ffffff;
+            border: 3px solid #000000;
+            padding: 12px 16px;
+            color: #000000;
+            font-weight: 500;
+        }
+        
+        .brutalist-input:focus {
+            outline: none;
+            border-color: #ff0000;
+            box-shadow: 4px 4px 0px #ff0000;
+        }
+        
+        .brutalist-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background: #ff0000;
+            border: 3px solid #000000;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .brutalist-fab:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #000000;
+        }
+        
+        .brutalist-avatar {
+            width: 60px;
+            height: 60px;
+            border: 3px solid #000000;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: 900;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+        
+        .brutalist-avatar:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: rotate(-5deg);
+        }
+        
+        .brutalist-toggle {
+            position: relative;
+            width: 80px;
+            height: 40px;
+            background: #ffffff;
+            border: 3px solid #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .brutalist-toggle::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 30px;
+            height: 30px;
+            background: #000000;
+            transition: all 0.2s ease;
+        }
+        
+        .brutalist-toggle.active {
+            background: #00ff00;
+        }
+        
+        .brutalist-toggle.active::after {
+            transform: translateX(40px);
+            background: #ffffff;
+        }
+        
+        .brutalist-grid {
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .brutalist-alert {
+            background: #ffff00;
+            border: 3px solid #000000;
+            color: #000000;
+            padding: 16px;
+            margin: 16px 0;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .brutalist-warning {
+            background: #ffaa00;
+            border: 3px solid #000000;
+            color: #000000;
+        }
+        
+        .brutalist-error {
+            background: #ff0000;
+            border: 3px solid #000000;
+            color: #ffffff;
+        }
+        
+        .brutalist-success {
+            background: #00ff00;
+            border: 3px solid #000000;
+            color: #000000;
+        }
+        
+        .brutalist-code {
+            font-family: 'Space Mono', monospace;
+            background: #000000;
+            color: #00ff00;
+            padding: 16px;
+            border: 2px solid #00ff00;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        
+        .brutalist-terminal {
+            background: #000000;
+            color: #00ff00;
+            padding: 20px;
+            border: 3px solid #00ff00;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .terminal-line {
+            margin: 4px 0;
+        }
+        
+        .terminal-prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
+        .terminal-output {
+            color: #ffffff;
+        }
+        
+        .terminal-error {
+            color: #ff0000;
+        }
+        
+        .terminal-success {
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body class="brutalist-bg">
+    <!-- Brutalist Header -->
+    <header class="brutalist-header sticky top-0 z-50 p-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="brutalist-icon red">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h1 class="brutalist-title text-xl">FLAME AI CRM</h1>
+                    <p class="brutalist-text-secondary text-sm">BRUTALIST EDITION</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
+                    <button class="brutalist-button p-3 relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute -top-2 -right-2 brutalist-badge">3</span>
+                    </button>
+                    <button class="brutalist-button p-3 relative">
+                        <i class="fas fa-envelope"></i>
+                        <span class="absolute -top-2 -right-2 brutalist-badge">5</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="brutalist-text-primary text-sm">MARÍA GONZÁLEZ</p>
+                        <p class="brutalist-text-secondary text-xs">ADMINISTRADORA</p>
+                    </div>
+                    <div class="brutalist-avatar">
+                        <span>MG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Brutalist Sidebar -->
+        <aside class="brutalist-sidebar w-80 min-h-screen p-6">
+            <!-- User Profile -->
+            <div class="brutalist-card p-6 mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="brutalist-avatar">
+                        <span>MG</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="brutalist-text-primary font-bold">MARÍA GONZÁLEZ</h3>
+                        <p class="brutalist-text-secondary text-sm">ADMINISTRADORA</p>
+                        <p class="brutalist-text-secondary text-xs">ID: FLM-2024-001</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="brutalist-card p-6 mb-6">
+                <h3 class="brutalist-text-primary font-bold mb-4">ACCIONES RÁPIDAS</h3>
+                <div class="space-y-3">
+                    <button class="brutalist-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-plus mr-2"></i>NUEVO CONTACTO
+                    </button>
+                    <button class="brutalist-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-comment mr-2"></i>NUEVA CONVERSACIÓN
+                    </button>
+                    <button class="brutalist-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-ticket-alt mr-2"></i>CREAR TICKET
+                    </button>
+                </div>
+            </div>
+
+            <div class="brutalist-divider"></div>
+
+            <!-- Navigation -->
+            <nav class="space-y-4">
+                <div class="brutalist-card p-4">
+                    <h3 class="brutalist-text-secondary text-xs font-bold uppercase tracking-wider mb-4">PRINCIPAL</h3>
+                    <div class="space-y-0">
+                        <a href="#" class="nav-item-brutalist active flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span class="flex-1">DASHBOARD</span>
+                            <span class="brutalist-status">LIVE</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-users mr-3"></i>
+                            <span class="flex-1">CONTACTOS</span>
+                            <span class="brutalist-badge">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-comments mr-3"></i>
+                            <span class="flex-1">CONVERSACIONES</span>
+                            <span class="brutalist-badge">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="brutalist-card p-4">
+                    <h3 class="brutalist-text-secondary text-xs font-bold uppercase tracking-wider mb-4">MARKETING</h3>
+                    <div class="space-y-0">
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-bullhorn mr-3"></i>
+                            <span class="flex-1">CAMPAÑAS</span>
+                            <span class="brutalist-badge">5</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-bolt mr-3"></i>
+                            <span class="flex-1">MENSAJES RÁPIDOS</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-calendar mr-3"></i>
+                            <span class="flex-1">PROGRAMACIONES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="brutalist-card p-4">
+                    <h3 class="brutalist-text-secondary text-xs font-bold uppercase tracking-wider mb-4">AUTOMATIZACIÓN</h3>
+                    <div class="space-y-0">
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-robot mr-3"></i>
+                            <span class="flex-1">FLUJOS DE BOT</span>
+                            <span class="brutalist-badge">12</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-list-ol mr-3"></i>
+                            <span class="flex-1">COLAS</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="brutalist-card p-4">
+                    <h3 class="brutalist-text-secondary text-xs font-bold uppercase tracking-wider mb-4">ADMINISTRACIÓN</h3>
+                    <div class="space-y-0">
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-user-cog mr-3"></i>
+                            <span class="flex-1">USUARIOS</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span class="flex-1">CONFIGURACIÓN</span>
+                        </a>
+                        <a href="#" class="nav-item-brutalist flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span class="flex-1">ANALYTICS</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 brutalist-grid">
+            <!-- Header -->
+            <div class="brutalist-card p-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="brutalist-title text-4xl mb-2">DASHBOARD</h1>
+                        <p class="brutalist-text-secondary">BIENVENIDO DE VUELTA, MARÍA. AQUÍ TIENES UN RESUMEN DE TU ACTIVIDAD.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="brutalist-text-secondary text-sm">SESIÓN ACTIVA</div>
+                        <div class="brutalist-text-primary text-lg font-bold">2H 34M</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Alert -->
+            <div class="brutalist-alert">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                SISTEMA OPERATIVO - TODOS LOS MÓDULOS FUNCIONANDO CORRECTAMENTE
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="brutalist-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="brutalist-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="brutalist-text-secondary text-xs">ESTADO</div>
+                            <div class="brutalist-status">ONLINE</div>
+                        </div>
+                    </div>
+                    <h3 class="brutalist-text-primary text-4xl font-black mb-2">1,247</h3>
+                    <p class="brutalist-text-secondary text-sm mb-4">CONTACTOS TOTALES</p>
+                    <div class="brutalist-progress">
+                        <div class="brutalist-progress-fill bg-blue-500" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-bold">+12%</span>
+                        <span class="brutalist-text-secondary">ESTE MES</span>
+                    </div>
+                </div>
+
+                <div class="brutalist-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="brutalist-icon green">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="brutalist-text-secondary text-xs">ESTADO</div>
+                            <div class="brutalist-status">ACTIVAS</div>
+                        </div>
+                    </div>
+                    <h3 class="brutalist-text-primary text-4xl font-black mb-2">24</h3>
+                    <p class="brutalist-text-secondary text-sm mb-4">CONVERSACIONES ACTIVAS</p>
+                    <div class="brutalist-progress">
+                        <div class="brutalist-progress-fill bg-green-500" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-bold">+8%</span>
+                        <span class="brutalist-text-secondary">ESTA SEMANA</span>
+                    </div>
+                </div>
+
+                <div class="brutalist-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="brutalist-icon yellow">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="brutalist-text-secondary text-xs">ESTADO</div>
+                            <div class="brutalist-status">PENDIENTES</div>
+                        </div>
+                    </div>
+                    <h3 class="brutalist-text-primary text-4xl font-black mb-2">8</h3>
+                    <p class="brutalist-text-secondary text-sm mb-4">TICKETS ABIERTOS</p>
+                    <div class="brutalist-progress">
+                        <div class="brutalist-progress-fill bg-yellow-500" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-red-600 font-bold">-3%</span>
+                        <span class="brutalist-text-secondary">ESTA SEMANA</span>
+                    </div>
+                </div>
+
+                <div class="brutalist-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="brutalist-icon purple">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="brutalist-text-secondary text-xs">ESTADO</div>
+                            <div class="brutalist-status">EXCELENTE</div>
+                        </div>
+                    </div>
+                    <h3 class="brutalist-text-primary text-4xl font-black mb-2">94%</h3>
+                    <p class="brutalist-text-secondary text-sm mb-4">TASA DE RESPUESTA</p>
+                    <div class="brutalist-progress">
+                        <div class="brutalist-progress-fill bg-purple-500" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-bold">+2%</span>
+                        <span class="brutalist-text-secondary">ESTE MES</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- System Terminal -->
+                <div class="brutalist-card p-8">
+                    <h3 class="brutalist-text-primary text-lg font-bold mb-6 flex items-center">
+                        <i class="fas fa-terminal text-red-500 mr-3"></i>
+                        SISTEMA TERMINAL
+                    </h3>
+                    <div class="brutalist-terminal">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">root@flame-ai-crm:~$</span> <span class="terminal-output">system status</span>
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ CPU Usage: 67% | Memory: 42% | Network: 23%
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">root@flame-ai-crm:~$</span> <span class="terminal-output">ai processing status</span>
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ AI Processing: 89% | Avg Response: 2.3s
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">root@flame-ai-crm:~$</span> <span class="terminal-output">check connections</span>
+                        </div>
+                        <div class="terminal-line terminal-success">
+                            ✓ All connections active | Uptime: 99.9%
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">root@flame-ai-crm:~$</span> <span class="terminal-output">_</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="brutalist-card p-8">
+                    <h3 class="brutalist-text-primary text-lg font-bold mb-6 flex items-center">
+                        <i class="fas fa-broadcast-tower text-green-500 mr-3"></i>
+                        ACTIVIDAD RECIENTE
+                    </h3>
+                    <div class="space-y-4 max-h-80 overflow-y-auto">
+                        <div class="brutalist-activity contact">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-4 h-4 bg-blue-500 mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="brutalist-text-primary text-sm font-bold">NUEVO CONTACTO AGREGADO</p>
+                                    <p class="brutalist-text-secondary text-sm">Juan Pérez - hace 2 minutos</p>
+                                    <p class="brutalist-text-secondary text-xs">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="brutalist-activity ticket">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-4 h-4 bg-yellow-500 mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="brutalist-text-primary text-sm font-bold">TICKET RESUELTO</p>
+                                    <p class="brutalist-text-secondary text-sm">#TKT-2024-001 - hace 5 minutos</p>
+                                    <p class="brutalist-text-secondary text-xs">Respuesta IA: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="brutalist-activity campaign">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-4 h-4 bg-purple-500 mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="brutalist-text-primary text-sm font-bold">CAMPAÑA EJECUTADA</p>
+                                    <p class="brutalist-text-secondary text-sm">Promoción de verano - hace 12 minutos</p>
+                                    <p class="brutalist-text-secondary text-xs">Enviados: 1,247 | Abiertos: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="brutalist-activity conversation">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-4 h-4 bg-green-500 mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="brutalist-text-primary text-sm font-bold">NUEVA CONVERSACIÓN</p>
+                                    <p class="brutalist-text-secondary text-sm">María López - hace 15 minutos</p>
+                                    <p class="brutalist-text-secondary text-xs">Canal: WhatsApp | Prioridad: Alta</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="brutalist-activity bot">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-4 h-4 bg-red-500 mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="brutalist-text-primary text-sm font-bold">FLUJO DE BOT COMPLETADO</p>
+                                    <p class="brutalist-text-secondary text-sm">Onboarding - hace 20 minutos</p>
+                                    <p class="brutalist-text-secondary text-xs">Tiempo promedio: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Code -->
+            <div class="brutalist-card p-8 mt-8">
+                <h3 class="brutalist-text-primary text-lg font-bold mb-6 flex items-center">
+                    <i class="fas fa-code text-blue-500 mr-3"></i>
+                    SISTEMA CODE
+                </h3>
+                <div class="brutalist-code">
+                    <div>// FLAME AI CRM SYSTEM STATUS</div>
+                    <div>const systemStatus = {</div>
+                    <div>&nbsp;&nbsp;version: "2.1.0",</div>
+                    <div>&nbsp;&nbsp;status: "OPERATIONAL",</div>
+                    <div>&nbsp;&nbsp;uptime: "99.9%",</div>
+                    <div>&nbsp;&nbsp;cpu: "67%",</div>
+                    <div>&nbsp;&nbsp;memory: "42%",</div>
+                    <div>&nbsp;&nbsp;network: "23%",</div>
+                    <div>&nbsp;&nbsp;ai: "89%",</div>
+                    <div>&nbsp;&nbsp;lastUpdate: new Date().toISOString()</div>
+                    <div>};</div>
+                    <div></div>
+                    <div>// ALL SYSTEMS NOMINAL</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="brutalist-fab">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Brutalist interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-brutalist');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add brutalist effect to buttons
+            const buttons = document.querySelectorAll('.brutalist-button');
+            buttons.forEach(button => {
+                button.addEventListener('mousedown', function() {
+                    this.style.transform = 'translate(0px, 0px)';
+                    this.style.boxShadow = '2px 2px 0px #ff0000';
+                });
+                
+                button.addEventListener('mouseup', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '';
+                });
+            });
+
+            // Terminal cursor blink effect
+            const cursor = document.querySelector('.terminal-output:last-child');
+            if (cursor) {
+                setInterval(() => {
+                    cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html> 

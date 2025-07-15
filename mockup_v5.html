@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Terminal Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .terminal-bg {
+            background: #000000;
+            color: #00ff00;
+        }
+        
+        .terminal-header {
+            background: #0a0a0a;
+            border-bottom: 1px solid #00ff00;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .terminal-sidebar {
+            background: #0a0a0a;
+            border-right: 1px solid #00ff00;
+        }
+        
+        .terminal-card {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        
+        .terminal-card:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            border-color: #00ff88;
+        }
+        
+        .terminal-nav {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+        
+        .nav-item-terminal {
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .nav-item-terminal:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-left-color: #00ff00;
+            color: #00ff88;
+        }
+        
+        .nav-item-terminal.active {
+            background: rgba(0, 255, 0, 0.15);
+            border-left-color: #00ff00;
+            color: #00ff88;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+        }
+        
+        .terminal-button {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .terminal-button:hover {
+            background: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        .terminal-progress {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            height: 8px;
+        }
+        
+        .terminal-progress-fill {
+            background: linear-gradient(90deg, #00ff00, #00ff88);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .terminal-status {
+            background: #00ff00;
+            color: #000000;
+            font-weight: bold;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        
+        .terminal-badge {
+            background: #00ff00;
+            color: #000000;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        
+        .terminal-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            margin: 16px 0;
+        }
+        
+        .terminal-activity {
+            border-left: 2px solid #00ff00;
+            padding: 8px 12px;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .terminal-activity:hover {
+            background: rgba(0, 255, 0, 0.05);
+            border-left-color: #00ff88;
+        }
+        
+        .terminal-activity.contact { border-left-color: #00ff00; }
+        .terminal-activity.ticket { border-left-color: #ffaa00; }
+        .terminal-activity.campaign { border-left-color: #ff0080; }
+        .terminal-activity.conversation { border-left-color: #00ff88; }
+        .terminal-activity.bot { border-left-color: #8b5cf6; }
+        
+        .terminal-metric {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .terminal-metric:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+        
+        .terminal-icon {
+            width: 40px;
+            height: 40px;
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff00;
+        }
+        
+        .terminal-icon:hover {
+            background: #00ff00;
+            color: #000000;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #00ff00;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #00ff00; }
+        }
+        
+        .matrix-bg {
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .terminal-input {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .terminal-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        
+        .terminal-log {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin: 4px 0;
+            padding: 2px 0;
+        }
+        
+        .log-time {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .log-info { color: #00ff00; }
+        .log-warning { color: #ffaa00; }
+        .log-error { color: #ff4444; }
+        .log-success { color: #00ff88; }
+    </style>
+</head>
+<body class="terminal-bg min-h-screen">
+    <!-- Terminal Header -->
+    <header class="terminal-header p-4 border-b border-green-500">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="terminal-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-green-500 typewriter">FLAME_AI_CRM v2.1.0</h1>
+                    <p class="text-xs text-green-400">Terminal Mode - System Online</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-green-400">STATUS:</span>
+                    <span class="terminal-status">ONLINE</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-green-400">UPTIME:</span>
+                    <span class="text-xs text-green-500" id="uptime">00:02:34</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-green-400">TIME:</span>
+                    <span class="text-xs text-green-500" id="current-time"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Terminal Sidebar -->
+        <aside class="terminal-sidebar w-80 min-h-screen p-4">
+            <!-- System Info -->
+            <div class="terminal-card p-4 mb-6">
+                <h3 class="text-sm font-bold text-green-500 mb-3">SYSTEM_INFO</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-green-400">USER:</span>
+                        <span class="text-green-500">maria.gonzalez</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-green-400">ROLE:</span>
+                        <span class="text-green-500">ADMIN</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-green-400">SESSION:</span>
+                        <span class="text-green-500">ACTIVE</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-green-400">VERSION:</span>
+                        <span class="text-green-500">2.1.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Commands -->
+            <div class="terminal-card p-4 mb-6">
+                <h3 class="text-sm font-bold text-green-500 mb-3">QUICK_COMMANDS</h3>
+                <div class="space-y-2">
+                    <button class="terminal-button w-full py-2 px-3 text-xs">
+                        <i class="fas fa-plus mr-2"></i>ADD_CONTACT
+                    </button>
+                    <button class="terminal-button w-full py-2 px-3 text-xs">
+                        <i class="fas fa-comment mr-2"></i>NEW_CONVERSATION
+                    </button>
+                    <button class="terminal-button w-full py-2 px-3 text-xs">
+                        <i class="fas fa-ticket-alt mr-2"></i>CREATE_TICKET
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="space-y-4">
+                <div class="terminal-card p-3">
+                    <h3 class="text-xs font-bold text-green-500 uppercase mb-3">CORE_MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-terminal active flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span class="flex-1">DASHBOARD</span>
+                            <span class="terminal-status">LIVE</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-users mr-3"></i>
+                            <span class="flex-1">CONTACTS</span>
+                            <span class="terminal-badge">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-comments mr-3"></i>
+                            <span class="flex-1">CONVERSATIONS</span>
+                            <span class="terminal-badge">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="terminal-card p-3">
+                    <h3 class="text-xs font-bold text-green-500 uppercase mb-3">MARKETING_MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-bullhorn mr-3"></i>
+                            <span class="flex-1">CAMPAIGNS</span>
+                            <span class="terminal-badge">5</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-bolt mr-3"></i>
+                            <span class="flex-1">QUICK_MSGS</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-calendar mr-3"></i>
+                            <span class="flex-1">SCHEDULES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="terminal-card p-3">
+                    <h3 class="text-xs font-bold text-green-500 uppercase mb-3">AI_MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-robot mr-3"></i>
+                            <span class="flex-1">BOT_FLOWS</span>
+                            <span class="terminal-badge">12</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-list-ol mr-3"></i>
+                            <span class="flex-1">QUEUES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="terminal-card p-3">
+                    <h3 class="text-xs font-bold text-green-500 uppercase mb-3">ADMIN_MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-user-cog mr-3"></i>
+                            <span class="flex-1">USERS</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span class="flex-1">CONFIG</span>
+                        </a>
+                        <a href="#" class="nav-item-terminal flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span class="flex-1">ANALYTICS</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Terminal Area -->
+        <main class="flex-1 p-6 matrix-bg">
+            <!-- Terminal Prompt -->
+            <div class="terminal-card p-4 mb-6">
+                <div class="flex items-center space-x-2">
+                    <span class="text-green-500">root@flame-ai-crm:~$</span>
+                    <span class="text-green-500 blink">_</span>
+                </div>
+                <div class="mt-2">
+                    <span class="text-green-400">Welcome to Flame AI CRM Terminal Mode</span>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="terminal-metric">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="terminal-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-green-400">STATUS</div>
+                            <div class="text-xs text-green-500">ONLINE</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-green-500 mb-1">1,247</h3>
+                    <p class="text-xs text-green-400 mb-3">TOTAL_CONTACTS</p>
+                    <div class="terminal-progress">
+                        <div class="terminal-progress-fill" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-500">+12%</span>
+                        <span class="text-green-400">THIS_MONTH</span>
+                    </div>
+                </div>
+
+                <div class="terminal-metric">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="terminal-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-green-400">STATUS</div>
+                            <div class="text-xs text-green-500">ACTIVE</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-green-500 mb-1">24</h3>
+                    <p class="text-xs text-green-400 mb-3">ACTIVE_CONVERSATIONS</p>
+                    <div class="terminal-progress">
+                        <div class="terminal-progress-fill" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-500">+8%</span>
+                        <span class="text-green-400">THIS_WEEK</span>
+                    </div>
+                </div>
+
+                <div class="terminal-metric">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="terminal-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-green-400">STATUS</div>
+                            <div class="text-xs text-yellow-500">PENDING</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-green-500 mb-1">8</h3>
+                    <p class="text-xs text-green-400 mb-3">OPEN_TICKETS</p>
+                    <div class="terminal-progress">
+                        <div class="terminal-progress-fill" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-red-500">-3%</span>
+                        <span class="text-green-400">THIS_WEEK</span>
+                    </div>
+                </div>
+
+                <div class="terminal-metric">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="terminal-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-green-400">STATUS</div>
+                            <div class="text-xs text-green-500">EXCELLENT</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-green-500 mb-1">94%</h3>
+                    <p class="text-xs text-green-400 mb-3">RESPONSE_RATE</p>
+                    <div class="terminal-progress">
+                        <div class="terminal-progress-fill" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-500">+2%</span>
+                        <span class="text-green-400">THIS_MONTH</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- System Log -->
+                <div class="terminal-card p-4">
+                    <h3 class="text-sm font-bold text-green-500 mb-4 flex items-center">
+                        <i class="fas fa-terminal mr-2"></i>
+                        SYSTEM_LOG
+                    </h3>
+                    <div class="terminal-log">
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:32:15]</span>
+                            <span class="log-info">INFO:</span>
+                            <span class="text-green-400">CPU_USAGE: 67% | MEMORY: 42% | NETWORK: 23%</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:32:10]</span>
+                            <span class="log-success">SUCCESS:</span>
+                            <span class="text-green-400">AI_PROCESSING_COMPLETE | AVG_TIME: 2.3s</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:32:05]</span>
+                            <span class="log-info">INFO:</span>
+                            <span class="text-green-400">NEW_CONTACT_ADDED | ID: CON-2024-1247</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:32:00]</span>
+                            <span class="log-success">SUCCESS:</span>
+                            <span class="text-green-400">TICKET_RESOLVED | #TKT-2024-001</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:31:55]</span>
+                            <span class="log-info">INFO:</span>
+                            <span class="text-green-400">CAMPAIGN_EXECUTED | RECIPIENTS: 1,247</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[2024-01-15 14:31:50]</span>
+                            <span class="log-warning">WARNING:</span>
+                            <span class="text-yellow-400">HIGH_PRIORITY_CONVERSATION | USER: MARIA_LOPEZ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Monitor -->
+                <div class="terminal-card p-4">
+                    <h3 class="text-sm font-bold text-green-500 mb-4 flex items-center">
+                        <i class="fas fa-eye mr-2"></i>
+                        ACTIVITY_MONITOR
+                    </h3>
+                    <div class="space-y-2 max-h-80 overflow-y-auto">
+                        <div class="terminal-activity contact">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-green-500">CONTACT_ADDED</p>
+                                    <p class="text-xs text-green-400">USER: JUAN_PEREZ | TIME: 2min ago</p>
+                                    <p class="text-xs text-green-400">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-activity ticket">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-yellow-500">TICKET_RESOLVED</p>
+                                    <p class="text-xs text-yellow-400">TICKET: #TKT-2024-001 | TIME: 5min ago</p>
+                                    <p class="text-xs text-yellow-400">AI_RESPONSE_TIME: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-activity campaign">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-purple-500">CAMPAIGN_EXECUTED</p>
+                                    <p class="text-xs text-purple-400">CAMPAIGN: SUMMER_PROMO | TIME: 12min ago</p>
+                                    <p class="text-xs text-purple-400">SENT: 1,247 | OPEN_RATE: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-activity conversation">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-blue-500">CONVERSATION_STARTED</p>
+                                    <p class="text-xs text-blue-400">USER: MARIA_LOPEZ | TIME: 15min ago</p>
+                                    <p class="text-xs text-blue-400">CHANNEL: WHATSAPP | PRIORITY: HIGH</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-activity bot">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-cyan-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-cyan-500">BOT_FLOW_COMPLETED</p>
+                                    <p class="text-xs text-cyan-400">FLOW: ONBOARDING | TIME: 20min ago</p>
+                                    <p class="text-xs text-cyan-400">AVG_TIME: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Input -->
+            <div class="terminal-card p-4 mt-6">
+                <div class="flex items-center space-x-2">
+                    <span class="text-green-500">root@flame-ai-crm:~$</span>
+                    <input type="text" class="terminal-input flex-1" placeholder="Enter command..." id="command-input">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Update uptime
+        function updateUptime() {
+            const startTime = new Date();
+            startTime.setHours(startTime.getHours() - 2);
+            startTime.setMinutes(startTime.getMinutes() - 34);
+            
+            setInterval(() => {
+                const now = new Date();
+                const diff = now - startTime;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('uptime').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        updateUptime();
+
+        // Terminal interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-terminal');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Command input
+            const commandInput = document.getElementById('command-input');
+            commandInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const command = this.value.toLowerCase();
+                    console.log('Command executed:', command);
+                    this.value = '';
+                    
+                    // Add command to log
+                    const log = document.querySelector('.terminal-log');
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry';
+                    logEntry.innerHTML = `
+                        <span class="log-time">[${new Date().toLocaleString()}]</span>
+                        <span class="log-info">COMMAND:</span>
+                        <span class="text-green-400">${command}</span>
+                    `;
+                    log.appendChild(logEntry);
+                    log.scrollTop = log.scrollHeight;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Minimalista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .minimal-bg {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .dark-minimal-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .floating-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-floating-header {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .sidebar-minimal {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-sidebar-minimal {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .nav-item-minimal {
+            position: relative;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin: 4px 0;
+        }
+        
+        .nav-item-minimal:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .nav-item-minimal.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .dark-nav-item-minimal:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .dark-nav-item-minimal.active {
+            background: rgba(59, 130, 246, 0.25);
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-metric-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover,
+        .dark-metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-minimal {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .dark-progress-minimal {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill-minimal {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        }
+        
+        .btn-minimal {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-minimal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            margin: 16px 0;
+        }
+        
+        .dark-section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            margin: 16px 0;
+        }
+        
+        .activity-item-minimal {
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .activity-item-minimal:hover {
+            background: rgba(59, 130, 246, 0.05);
+            transform: translateX(4px);
+        }
+        
+        .dark-activity-item-minimal:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-online { background: #10b981; color: white; }
+        .status-busy { background: #f59e0b; color: white; }
+        .status-offline { background: #ef4444; color: white; }
+        
+        .toggle-theme {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-toggle-theme {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+    </style>
+</head>
+<body class="minimal-bg min-h-screen text-gray-800" id="body">
+    <!-- Theme Toggle -->
+    <div class="toggle-theme" id="theme-toggle">
+        <i class="fas fa-moon text-gray-600" id="theme-icon"></i>
+    </div>
+
+    <!-- Header -->
+    <header class="floating-header sticky top-0 z-50">
+        <div class="flex items-center justify-between px-8 py-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-fire text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Flame AI CRM</h1>
+                    <p class="text-sm text-gray-500">Gestión Inteligente</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                        <i class="fas fa-bell text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                        <i class="fas fa-envelope text-gray-600"></i>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">5</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900">María González</p>
+                        <p class="text-xs text-gray-500">Administradora</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">MG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="sidebar-minimal w-80 min-h-screen p-6">
+            <!-- Quick Actions -->
+            <div class="mb-8">
+                <h3 class="text-sm font-semibold text-gray-700 mb-4">Acciones Rápidas</h3>
+                <div class="space-y-2">
+                    <button class="btn-minimal w-full py-3 px-4 text-sm font-medium text-white">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Contacto
+                    </button>
+                    <button class="btn-minimal w-full py-3 px-4 text-sm font-medium text-white">
+                        <i class="fas fa-comment mr-2"></i>Nueva Conversación
+                    </button>
+                    <button class="btn-minimal w-full py-3 px-4 text-sm font-medium text-white">
+                        <i class="fas fa-ticket-alt mr-2"></i>Crear Ticket
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <div class="mb-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Principal</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-minimal active flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-chart-line mr-3 text-blue-500"></i>
+                            <span class="flex-1">Dashboard</span>
+                            <span class="status-badge status-online">Live</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-users mr-3 text-blue-500"></i>
+                            <span class="flex-1">Contactos</span>
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-comments mr-3 text-green-500"></i>
+                            <span class="flex-1">Conversaciones</span>
+                            <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Marketing</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-bullhorn mr-3 text-purple-500"></i>
+                            <span class="flex-1">Campañas</span>
+                            <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">5</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-bolt mr-3 text-yellow-500"></i>
+                            <span class="flex-1">Mensajes Rápidos</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-calendar mr-3 text-pink-500"></i>
+                            <span class="flex-1">Programaciones</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Automatización</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-robot mr-3 text-green-500"></i>
+                            <span class="flex-1">Flujos de Bot</span>
+                            <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">12</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-list-ol mr-3 text-teal-500"></i>
+                            <span class="flex-1">Colas</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Administración</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-user-cog mr-3 text-gray-500"></i>
+                            <span class="flex-1">Usuarios</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-cog mr-3 text-gray-500"></i>
+                            <span class="flex-1">Configuración</span>
+                        </a>
+                        <a href="#" class="nav-item-minimal flex items-center px-4 py-3 text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-3 text-gray-500"></i>
+                            <span class="flex-1">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                <p class="text-gray-600">Bienvenido de vuelta, María. Aquí tienes un resumen de tu actividad.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-white text-xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Total</div>
+                            <div class="text-xs text-green-500 font-medium">● Activo</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">1,247</h3>
+                    <p class="text-sm text-gray-600 mb-3">Contactos Totales</p>
+                    <div class="progress-minimal h-2">
+                        <div class="progress-fill-minimal bg-gradient-to-r from-blue-500 to-blue-600" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-600 font-medium">+12%</span>
+                        <span class="text-gray-500">este mes</span>
+                    </div>
+                </div>
+
+                <div class="metric-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-comments text-white text-xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Activas</div>
+                            <div class="text-xs text-green-500 font-medium">● En línea</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">24</h3>
+                    <p class="text-sm text-gray-600 mb-3">Conversaciones Activas</p>
+                    <div class="progress-minimal h-2">
+                        <div class="progress-fill-minimal bg-gradient-to-r from-green-500 to-green-600" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-600 font-medium">+8%</span>
+                        <span class="text-gray-500">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="metric-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-ticket-alt text-white text-xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Abiertos</div>
+                            <div class="text-xs text-yellow-500 font-medium">● Pendientes</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">8</h3>
+                    <p class="text-sm text-gray-600 mb-3">Tickets Abiertos</p>
+                    <div class="progress-minimal h-2">
+                        <div class="progress-fill-minimal bg-gradient-to-r from-yellow-500 to-yellow-600" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-red-600 font-medium">-3%</span>
+                        <span class="text-gray-500">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="metric-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Tasa</div>
+                            <div class="text-xs text-green-500 font-medium">● Excelente</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">94%</h3>
+                    <p class="text-sm text-gray-600 mb-3">Tasa de Respuesta</p>
+                    <div class="progress-minimal h-2">
+                        <div class="progress-fill-minimal bg-gradient-to-r from-purple-500 to-purple-600" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-600 font-medium">+2%</span>
+                        <span class="text-gray-500">este mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- System Metrics -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-server text-blue-500 mr-2"></i>
+                        Métricas del Sistema
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Uso de CPU</span>
+                                <span class="text-sm text-blue-600 font-medium">67%</span>
+                            </div>
+                            <div class="progress-minimal h-3">
+                                <div class="progress-fill-minimal bg-gradient-to-r from-blue-500 to-blue-600" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Uso de Memoria</span>
+                                <span class="text-sm text-blue-600 font-medium">42%</span>
+                            </div>
+                            <div class="progress-minimal h-3">
+                                <div class="progress-fill-minimal bg-gradient-to-r from-blue-500 to-blue-600" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Carga de Red</span>
+                                <span class="text-sm text-blue-600 font-medium">23%</span>
+                            </div>
+                            <div class="progress-minimal h-3">
+                                <div class="progress-fill-minimal bg-gradient-to-r from-blue-500 to-blue-600" style="width: 23%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Procesamiento IA</span>
+                                <span class="text-sm text-blue-600 font-medium">89%</span>
+                            </div>
+                            <div class="progress-minimal h-3">
+                                <div class="progress-fill-minimal bg-gradient-to-r from-blue-500 to-blue-600" style="width: 89%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-broadcast-tower text-green-500 mr-2"></i>
+                        Actividad Reciente
+                    </h3>
+                    <div class="space-y-3 max-h-80 overflow-y-auto">
+                        <div class="activity-item-minimal border-l-green-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Nuevo contacto agregado</p>
+                                    <p class="text-xs text-blue-600">Juan Pérez - hace 2 minutos</p>
+                                    <p class="text-xs text-gray-500">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item-minimal border-l-blue-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Ticket resuelto</p>
+                                    <p class="text-xs text-blue-600">#TKT-2024-001 - hace 5 minutos</p>
+                                    <p class="text-xs text-gray-500">Respuesta IA: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item-minimal border-l-purple-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Campaña ejecutada</p>
+                                    <p class="text-xs text-purple-600">Promoción de verano - hace 12 minutos</p>
+                                    <p class="text-xs text-gray-500">Enviados: 1,247 | Abiertos: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item-minimal border-l-yellow-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Nueva conversación</p>
+                                    <p class="text-xs text-yellow-600">María López - hace 15 minutos</p>
+                                    <p class="text-xs text-gray-500">Canal: WhatsApp | Prioridad: Alta</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item-minimal border-l-green-500">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Flujo de bot completado</p>
+                                    <p class="text-xs text-green-600">Flujo: Onboarding - hace 20 minutos</p>
+                                    <p class="text-xs text-gray-500">Tiempo promedio: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const body = document.getElementById('body');
+        
+        let isDark = false;
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            
+            if (isDark) {
+                body.classList.remove('minimal-bg');
+                body.classList.add('dark-minimal-bg');
+                body.classList.add('text-gray-100');
+                
+                // Update all elements for dark theme
+                document.querySelectorAll('.glass-card').forEach(card => {
+                    card.classList.remove('glass-card');
+                    card.classList.add('dark-glass-card');
+                });
+                
+                document.querySelector('.floating-header').classList.remove('floating-header');
+                document.querySelector('.floating-header').classList.add('dark-floating-header');
+                
+                document.querySelector('.sidebar-minimal').classList.remove('sidebar-minimal');
+                document.querySelector('.sidebar-minimal').classList.add('dark-sidebar-minimal');
+                
+                document.querySelectorAll('.nav-item-minimal').forEach(item => {
+                    item.classList.add('dark-nav-item-minimal');
+                });
+                
+                document.querySelectorAll('.metric-card').forEach(card => {
+                    card.classList.remove('metric-card');
+                    card.classList.add('dark-metric-card');
+                });
+                
+                document.querySelectorAll('.progress-minimal').forEach(progress => {
+                    progress.classList.remove('progress-minimal');
+                    progress.classList.add('dark-progress-minimal');
+                });
+                
+                document.querySelectorAll('.section-divider').forEach(divider => {
+                    divider.classList.remove('section-divider');
+                    divider.classList.add('dark-section-divider');
+                });
+                
+                document.querySelectorAll('.activity-item-minimal').forEach(item => {
+                    item.classList.add('dark-activity-item-minimal');
+                });
+                
+                themeToggle.classList.remove('toggle-theme');
+                themeToggle.classList.add('dark-toggle-theme');
+                
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeIcon.classList.remove('text-gray-600');
+                themeIcon.classList.add('text-gray-300');
+            } else {
+                body.classList.add('minimal-bg');
+                body.classList.remove('dark-minimal-bg');
+                body.classList.remove('text-gray-100');
+                
+                // Revert all elements to light theme
+                document.querySelectorAll('.dark-glass-card').forEach(card => {
+                    card.classList.remove('dark-glass-card');
+                    card.classList.add('glass-card');
+                });
+                
+                document.querySelector('.dark-floating-header').classList.remove('dark-floating-header');
+                document.querySelector('.dark-floating-header').classList.add('floating-header');
+                
+                document.querySelector('.dark-sidebar-minimal').classList.remove('dark-sidebar-minimal');
+                document.querySelector('.dark-sidebar-minimal').classList.add('sidebar-minimal');
+                
+                document.querySelectorAll('.dark-nav-item-minimal').forEach(item => {
+                    item.classList.remove('dark-nav-item-minimal');
+                });
+                
+                document.querySelectorAll('.dark-metric-card').forEach(card => {
+                    card.classList.remove('dark-metric-card');
+                    card.classList.add('metric-card');
+                });
+                
+                document.querySelectorAll('.dark-progress-minimal').forEach(progress => {
+                    progress.classList.remove('dark-progress-minimal');
+                    progress.classList.add('progress-minimal');
+                });
+                
+                document.querySelectorAll('.dark-section-divider').forEach(divider => {
+                    divider.classList.remove('dark-section-divider');
+                    divider.classList.add('section-divider');
+                });
+                
+                document.querySelectorAll('.dark-activity-item-minimal').forEach(item => {
+                    item.classList.remove('dark-activity-item-minimal');
+                });
+                
+                themeToggle.classList.add('toggle-theme');
+                themeToggle.classList.remove('dark-toggle-theme');
+                
+                themeIcon.classList.add('fa-moon');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('text-gray-600');
+                themeIcon.classList.remove('text-gray-300');
+            }
+        });
+
+        // Menu interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-minimal');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

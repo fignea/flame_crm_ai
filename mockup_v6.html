@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Retro 80s</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap');
+        
+        * {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .retro-bg {
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 0, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 0, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, #000033 0%, #330066 25%, #660099 50%, #9900cc 75%, #cc00ff 100%);
+        }
+        
+        .retro-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+            transition: left 0.8s;
+        }
+        
+        .retro-card:hover::before {
+            left: 100%;
+        }
+        
+        .retro-header {
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 3px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+        }
+        
+        .retro-sidebar {
+            background: rgba(0, 0, 0, 0.8);
+            border-right: 3px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+        
+        .retro-nav {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff00ff;
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .nav-item-retro {
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item-retro::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-item-retro:hover::before {
+            left: 100%;
+        }
+        
+        .nav-item-retro:hover {
+            background: rgba(255, 0, 255, 0.1);
+            border-left-color: #ff00ff;
+            transform: translateX(5px);
+        }
+        
+        .nav-item-retro.active {
+            background: rgba(255, 0, 255, 0.2);
+            border-left-color: #ff00ff;
+            box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+        
+        .retro-button {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            border: 2px solid #ffffff;
+            color: #000000;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .retro-button:hover::before {
+            left: 100%;
+        }
+        
+        .retro-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.5);
+        }
+        
+        .retro-progress {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            height: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-progress-fill {
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00);
+            height: 100%;
+            transition: width 0.8s ease;
+            position: relative;
+        }
+        
+        .retro-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .retro-badge {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: #000000;
+            font-weight: bold;
+            font-size: 10px;
+            padding: 4px 8px;
+            border: 1px solid #ffffff;
+            text-transform: uppercase;
+        }
+        
+        .retro-status {
+            background: linear-gradient(45deg, #00ff00, #ffff00);
+            color: #000000;
+            font-weight: bold;
+            font-size: 10px;
+            padding: 4px 8px;
+            border: 1px solid #ffffff;
+            text-transform: uppercase;
+        }
+        
+        .retro-divider {
+            height: 3px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ffff00);
+            margin: 16px 0;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        
+        .retro-activity {
+            border-left: 4px solid #00ffff;
+            padding: 12px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-activity::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .retro-activity:hover::before {
+            left: 100%;
+        }
+        
+        .retro-activity:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-left-color: #ffff00;
+            transform: translateX(5px);
+        }
+        
+        .retro-activity.contact { border-left-color: #00ffff; }
+        .retro-activity.ticket { border-left-color: #ffff00; }
+        .retro-activity.campaign { border-left-color: #ff00ff; }
+        .retro-activity.conversation { border-left-color: #00ff00; }
+        .retro-activity.bot { border-left-color: #ff8800; }
+        
+        .retro-metric {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-metric:hover {
+            border-color: #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+            transform: translateY(-5px);
+        }
+        
+        .retro-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retro-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transition: left 0.5s;
+        }
+        
+        .retro-icon:hover::before {
+            left: 100%;
+        }
+        
+        .retro-title {
+            font-family: 'Press Start 2P', cursive;
+            text-shadow: 2px 2px 4px rgba(255, 0, 255, 0.8);
+        }
+        
+        .retro-text {
+            text-shadow: 1px 1px 2px rgba(0, 255, 255, 0.8);
+        }
+        
+        .retro-glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 15px #ff00ff; }
+            to { text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff; }
+        }
+        
+        .retro-grid {
+            background-image: 
+                linear-gradient(rgba(255, 0, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="retro-bg min-h-screen text-cyan-400">
+    <!-- Retro Header -->
+    <header class="retro-header sticky top-0 z-50">
+        <div class="flex items-center justify-between px-8 py-4">
+            <div class="flex items-center space-x-4">
+                <div class="retro-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h1 class="retro-title text-xl text-cyan-400 retro-glow">FLAME AI CRM</h1>
+                    <p class="retro-text text-sm text-pink-400">RETRO EDITION v2.1.0</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
+                    <button class="retro-button p-3 rounded-none relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute -top-2 -right-2 retro-badge">3</span>
+                    </button>
+                    <button class="retro-button p-3 rounded-none relative">
+                        <i class="fas fa-envelope"></i>
+                        <span class="absolute -top-2 -right-2 retro-badge">5</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="retro-text text-sm font-bold text-cyan-400">MARÍA GONZÁLEZ</p>
+                        <p class="retro-text text-xs text-pink-400">ADMINISTRADORA</p>
+                    </div>
+                    <div class="retro-icon">
+                        <span class="font-bold text-sm">MG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Retro Sidebar -->
+        <aside class="retro-sidebar w-80 min-h-screen p-6">
+            <!-- System Info -->
+            <div class="retro-card p-4 mb-6">
+                <h3 class="retro-text text-sm font-bold text-pink-400 mb-3">SYSTEM INFO</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-cyan-400">USER:</span>
+                        <span class="text-yellow-400">maria.gonzalez</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-cyan-400">ROLE:</span>
+                        <span class="text-yellow-400">ADMIN</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-cyan-400">STATUS:</span>
+                        <span class="retro-status">ONLINE</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-cyan-400">VERSION:</span>
+                        <span class="text-yellow-400">2.1.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="retro-card p-4 mb-6">
+                <h3 class="retro-text text-sm font-bold text-pink-400 mb-3">QUICK ACTIONS</h3>
+                <div class="space-y-2">
+                    <button class="retro-button w-full py-3 px-4 text-xs">
+                        <i class="fas fa-plus mr-2"></i>NEW CONTACT
+                    </button>
+                    <button class="retro-button w-full py-3 px-4 text-xs">
+                        <i class="fas fa-comment mr-2"></i>NEW CONVERSATION
+                    </button>
+                    <button class="retro-button w-full py-3 px-4 text-xs">
+                        <i class="fas fa-ticket-alt mr-2"></i>CREATE TICKET
+                    </button>
+                </div>
+            </div>
+
+            <div class="retro-divider"></div>
+
+            <!-- Navigation -->
+            <nav class="space-y-4">
+                <div class="retro-card p-3">
+                    <h3 class="retro-text text-xs font-bold text-pink-400 uppercase mb-3">CORE MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-retro active flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-chart-line mr-3 text-cyan-400"></i>
+                            <span class="flex-1">DASHBOARD</span>
+                            <span class="retro-status">LIVE</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-users mr-3 text-cyan-400"></i>
+                            <span class="flex-1">CONTACTS</span>
+                            <span class="retro-badge">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-comments mr-3 text-green-400"></i>
+                            <span class="flex-1">CONVERSATIONS</span>
+                            <span class="retro-badge">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="retro-card p-3">
+                    <h3 class="retro-text text-xs font-bold text-pink-400 uppercase mb-3">MARKETING MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-bullhorn mr-3 text-pink-400"></i>
+                            <span class="flex-1">CAMPAIGNS</span>
+                            <span class="retro-badge">5</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-bolt mr-3 text-yellow-400"></i>
+                            <span class="flex-1">QUICK MESSAGES</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-calendar mr-3 text-pink-400"></i>
+                            <span class="flex-1">SCHEDULES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="retro-card p-3">
+                    <h3 class="retro-text text-xs font-bold text-pink-400 uppercase mb-3">AI MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-robot mr-3 text-green-400"></i>
+                            <span class="flex-1">BOT FLOWS</span>
+                            <span class="retro-badge">12</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-list-ol mr-3 text-cyan-400"></i>
+                            <span class="flex-1">QUEUES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="retro-card p-3">
+                    <h3 class="retro-text text-xs font-bold text-pink-400 uppercase mb-3">ADMIN MODULES</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-user-cog mr-3 text-yellow-400"></i>
+                            <span class="flex-1">USERS</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-cog mr-3 text-cyan-400"></i>
+                            <span class="flex-1">CONFIG</span>
+                        </a>
+                        <a href="#" class="nav-item-retro flex items-center px-3 py-2 text-xs">
+                            <i class="fas fa-chart-bar mr-3 text-pink-400"></i>
+                            <span class="flex-1">ANALYTICS</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 retro-grid">
+            <!-- Header -->
+            <div class="retro-card p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="retro-title text-3xl text-cyan-400 mb-2 retro-glow">DASHBOARD</h1>
+                        <p class="retro-text text-pink-400">Welcome back, María. Here's your activity summary.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="retro-text text-sm text-cyan-400">SESSION ACTIVE</div>
+                        <div class="retro-text text-lg font-bold text-yellow-400">2h 34m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="retro-metric">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="retro-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="retro-text text-xs text-cyan-400">STATUS</div>
+                            <div class="retro-status">ONLINE</div>
+                        </div>
+                    </div>
+                    <h3 class="retro-text text-2xl font-bold text-cyan-400 mb-1">1,247</h3>
+                    <p class="retro-text text-sm text-pink-400 mb-3">TOTAL CONTACTS</p>
+                    <div class="retro-progress">
+                        <div class="retro-progress-fill" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-400 font-bold">+12%</span>
+                        <span class="text-yellow-400">THIS MONTH</span>
+                    </div>
+                </div>
+
+                <div class="retro-metric">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="retro-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="retro-text text-xs text-cyan-400">STATUS</div>
+                            <div class="retro-status">ACTIVE</div>
+                        </div>
+                    </div>
+                    <h3 class="retro-text text-2xl font-bold text-cyan-400 mb-1">24</h3>
+                    <p class="retro-text text-sm text-pink-400 mb-3">ACTIVE CONVERSATIONS</p>
+                    <div class="retro-progress">
+                        <div class="retro-progress-fill" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-400 font-bold">+8%</span>
+                        <span class="text-yellow-400">THIS WEEK</span>
+                    </div>
+                </div>
+
+                <div class="retro-metric">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="retro-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="retro-text text-xs text-cyan-400">STATUS</div>
+                            <div class="retro-status">PENDING</div>
+                        </div>
+                    </div>
+                    <h3 class="retro-text text-2xl font-bold text-cyan-400 mb-1">8</h3>
+                    <p class="retro-text text-sm text-pink-400 mb-3">OPEN TICKETS</p>
+                    <div class="retro-progress">
+                        <div class="retro-progress-fill" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-red-400 font-bold">-3%</span>
+                        <span class="text-yellow-400">THIS WEEK</span>
+                    </div>
+                </div>
+
+                <div class="retro-metric">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="retro-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="retro-text text-xs text-cyan-400">STATUS</div>
+                            <div class="retro-status">EXCELLENT</div>
+                        </div>
+                    </div>
+                    <h3 class="retro-text text-2xl font-bold text-cyan-400 mb-1">94%</h3>
+                    <p class="retro-text text-sm text-pink-400 mb-3">RESPONSE RATE</p>
+                    <div class="retro-progress">
+                        <div class="retro-progress-fill" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-2">
+                        <span class="text-green-400 font-bold">+2%</span>
+                        <span class="text-yellow-400">THIS MONTH</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- System Metrics -->
+                <div class="retro-card p-6">
+                    <h3 class="retro-text text-lg font-bold text-pink-400 mb-4 flex items-center">
+                        <i class="fas fa-server text-cyan-400 mr-2"></i>
+                        SYSTEM METRICS
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-black/50 border border-cyan-400">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="retro-text text-sm font-medium text-cyan-400">CPU USAGE</span>
+                                <span class="retro-text text-sm text-yellow-400 font-bold">67%</span>
+                            </div>
+                            <div class="retro-progress h-4">
+                                <div class="retro-progress-fill" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-black/50 border border-cyan-400">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="retro-text text-sm font-medium text-cyan-400">MEMORY USAGE</span>
+                                <span class="retro-text text-sm text-yellow-400 font-bold">42%</span>
+                            </div>
+                            <div class="retro-progress h-4">
+                                <div class="retro-progress-fill" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-black/50 border border-cyan-400">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="retro-text text-sm font-medium text-cyan-400">NETWORK LOAD</span>
+                                <span class="retro-text text-sm text-yellow-400 font-bold">23%</span>
+                            </div>
+                            <div class="retro-progress h-4">
+                                <div class="retro-progress-fill" style="width: 23%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-black/50 border border-cyan-400">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="retro-text text-sm font-medium text-cyan-400">AI PROCESSING</span>
+                                <span class="retro-text text-sm text-yellow-400 font-bold">89%</span>
+                            </div>
+                            <div class="retro-progress h-4">
+                                <div class="retro-progress-fill" style="width: 89%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="retro-card p-6">
+                    <h3 class="retro-text text-lg font-bold text-pink-400 mb-4 flex items-center">
+                        <i class="fas fa-broadcast-tower text-green-400 mr-2"></i>
+                        ACTIVITY FEED
+                    </h3>
+                    <div class="space-y-3 max-h-80 overflow-y-auto">
+                        <div class="retro-activity contact">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-3 h-3 bg-cyan-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="retro-text text-sm font-bold text-cyan-400">NEW CONTACT ADDED</p>
+                                    <p class="retro-text text-xs text-yellow-400">Juan Pérez - 2 minutes ago</p>
+                                    <p class="retro-text text-xs text-pink-400">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="retro-activity ticket">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-3 h-3 bg-yellow-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="retro-text text-sm font-bold text-yellow-400">TICKET RESOLVED</p>
+                                    <p class="retro-text text-xs text-yellow-400">#TKT-2024-001 - 5 minutes ago</p>
+                                    <p class="retro-text text-xs text-pink-400">AI Response: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="retro-activity campaign">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-3 h-3 bg-pink-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="retro-text text-sm font-bold text-pink-400">CAMPAIGN EXECUTED</p>
+                                    <p class="retro-text text-xs text-pink-400">Summer Promo - 12 minutes ago</p>
+                                    <p class="retro-text text-xs text-cyan-400">Sent: 1,247 | Opens: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="retro-activity conversation">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-3 h-3 bg-green-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="retro-text text-sm font-bold text-green-400">NEW CONVERSATION</p>
+                                    <p class="retro-text text-xs text-green-400">María López - 15 minutes ago</p>
+                                    <p class="retro-text text-xs text-cyan-400">Channel: WhatsApp | Priority: High</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="retro-activity bot">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-3 h-3 bg-orange-400 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="retro-text text-sm font-bold text-orange-400">BOT FLOW COMPLETED</p>
+                                    <p class="retro-text text-xs text-orange-400">Onboarding - 20 minutes ago</p>
+                                    <p class="retro-text text-xs text-cyan-400">Avg Time: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Retro interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-retro');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add retro sound effects (optional)
+            const buttons = document.querySelectorAll('.retro-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Add retro click effect
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Nuevo Diseño</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .hover-glow:hover {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .sidebar-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin: 8px 0;
+        }
+        
+        .menu-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .menu-item:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            transform: translateX(4px);
+        }
+        
+        .menu-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+            border-left: 3px solid #6366f1;
+        }
+        
+        .notification-badge {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .accent-gradient {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-gray-100">
+    <!-- Top Banner -->
+    <header class="glass-effect border-b border-white/10 sticky top-0 z-50">
+        <div class="flex items-center justify-between px-6 py-3">
+            <!-- Logo y Título -->
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center glow-effect">
+                    <i class="fas fa-fire text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gradient">Flame AI CRM</h1>
+                    <p class="text-xs text-gray-400">Gestión Inteligente de Relaciones</p>
+                </div>
+            </div>
+            
+            <!-- Notificaciones y Usuario -->
+            <div class="flex items-center space-x-4">
+                <!-- Notificaciones -->
+                <div class="relative">
+                    <button class="p-2 rounded-lg glass-effect hover-glow transition-all duration-300">
+                        <i class="fas fa-bell text-gray-300"></i>
+                        <span class="notification-badge absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white font-bold">3</span>
+                    </button>
+                </div>
+                
+                <!-- Mensajes -->
+                <div class="relative">
+                    <button class="p-2 rounded-lg glass-effect hover-glow transition-all duration-300">
+                        <i class="fas fa-envelope text-gray-300"></i>
+                        <span class="notification-badge absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white font-bold">5</span>
+                    </button>
+                </div>
+                
+                <!-- Usuario -->
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-white">María González</p>
+                        <p class="text-xs text-gray-400">Administradora</p>
+                    </div>
+                    <div class="relative group">
+                        <button class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center hover-glow transition-all duration-300">
+                            <span class="text-white font-semibold">MG</span>
+                        </button>
+                        <!-- Dropdown Usuario -->
+                        <div class="absolute right-0 mt-2 w-48 glass-effect rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                            <div class="py-2">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 transition-colors">
+                                    <i class="fas fa-user mr-2"></i>Mi Perfil
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 transition-colors">
+                                    <i class="fas fa-cog mr-2"></i>Configuración
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 transition-colors">
+                                    <i class="fas fa-question-circle mr-2"></i>Ayuda
+                                </a>
+                                <hr class="border-white/10 my-1">
+                                <a href="#" class="block px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-72 glass-effect border-r border-white/10 overflow-y-auto">
+            <div class="p-4">
+                <!-- Grupo: Dashboard -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Dashboard</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item active flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-chart-line mr-3 text-indigo-400"></i>
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grupo: Gestión de Clientes -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Gestión de Clientes</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-users mr-3 text-blue-400"></i>
+                            Contactos
+                            <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">1.2k</span>
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-comments mr-3 text-green-400"></i>
+                            Conversaciones
+                            <span class="ml-auto bg-green-500 text-white text-xs px-2 py-1 rounded-full">24</span>
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-ticket-alt mr-3 text-yellow-400"></i>
+                            Tickets
+                            <span class="ml-auto bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">8</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grupo: Marketing -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Marketing</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-bullhorn mr-3 text-purple-400"></i>
+                            Campañas
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-bolt mr-3 text-orange-400"></i>
+                            Mensajes Rápidos
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-calendar mr-3 text-pink-400"></i>
+                            Programaciones
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grupo: Automatización -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Automatización</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-robot mr-3 text-cyan-400"></i>
+                            Flujos de Bot
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-list-ol mr-3 text-emerald-400"></i>
+                            Colas
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grupo: Organización -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Organización</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-tags mr-3 text-teal-400"></i>
+                            Etiquetas
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-file-alt mr-3 text-indigo-400"></i>
+                            Archivos
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grupo: Administración -->
+                <div class="sidebar-group p-3">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administración</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-user-cog mr-3 text-gray-400"></i>
+                            Usuarios
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-link mr-3 text-gray-400"></i>
+                            Conexiones
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                            Reportes
+                        </a>
+                        <a href="#" class="menu-item flex items-center px-3 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-cog mr-3 text-gray-400"></i>
+                            Configuraciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <!-- Header de la página -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Dashboard</h2>
+                <p class="text-gray-400">Bienvenido de vuelta, María. Aquí tienes un resumen de tu actividad.</p>
+            </div>
+
+            <!-- Cards de Estadísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Contactos Totales</p>
+                            <p class="text-2xl font-bold text-white">1,247</p>
+                            <p class="text-green-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +12% este mes
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Conversaciones Activas</p>
+                            <p class="text-2xl font-bold text-white">24</p>
+                            <p class="text-green-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +8% esta semana
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-comments text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Tickets Abiertos</p>
+                            <p class="text-2xl font-bold text-white">8</p>
+                            <p class="text-red-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                -3% esta semana
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-ticket-alt text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Tasa de Respuesta</p>
+                            <p class="text-2xl font-bold text-white">94%</p>
+                            <p class="text-green-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +2% este mes
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos y Actividad Reciente -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfico de Actividad -->
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-4">Actividad Reciente</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white">Nuevo contacto agregado</p>
+                                <p class="text-xs text-gray-400">Juan Pérez - hace 5 minutos</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white">Ticket resuelto</p>
+                                <p class="text-xs text-gray-400">#TKT-2024-001 - hace 15 minutos</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white">Campaña enviada</p>
+                                <p class="text-xs text-gray-400">Promoción de verano - hace 1 hora</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white">Nueva conversación iniciada</p>
+                                <p class="text-xs text-gray-400">María López - hace 2 horas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversaciones Recientes -->
+                <div class="card-hover glass-effect rounded-xl p-6 border border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-4">Conversaciones Recientes</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm">JL</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-white">Juan López</p>
+                                <p class="text-xs text-gray-400">Hola, necesito información sobre...</p>
+                            </div>
+                            <span class="text-xs text-gray-400">2 min</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm">ML</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-white">María López</p>
+                                <p class="text-xs text-gray-400">Perfecto, muchas gracias por...</p>
+                            </div>
+                            <span class="text-xs text-gray-400">15 min</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm">CP</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-white">Carlos Pérez</p>
+                                <p class="text-xs text-gray-400">¿Cuándo estará disponible...</p>
+                            </div>
+                            <span class="text-xs text-gray-400">1 hora</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Efectos interactivos adicionales
+        document.addEventListener('DOMContentLoaded', function() {
+            // Efecto de hover en las cards
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Efecto de click en los menús
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Remover clase active de todos los items
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    // Agregar clase active al item clickeado
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

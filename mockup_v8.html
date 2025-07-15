@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flame AI CRM - Neumorphism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .neumorphism-bg {
+            background: #e0e5ec;
+        }
+        
+        .neumorphism-card {
+            background: #e0e5ec;
+            border-radius: 20px;
+            box-shadow: 
+                8px 8px 16px #a3b1c6,
+                -8px -8px 16px #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .neumorphism-card:hover {
+            box-shadow: 
+                12px 12px 24px #a3b1c6,
+                -12px -12px 24px #ffffff;
+            transform: translateY(-2px);
+        }
+        
+        .neumorphism-card-inset {
+            background: #e0e5ec;
+            border-radius: 20px;
+            box-shadow: 
+                inset 8px 8px 16px #a3b1c6,
+                inset -8px -8px 16px #ffffff;
+            border: none;
+        }
+        
+        .neumorphism-header {
+            background: #e0e5ec;
+            box-shadow: 
+                0 4px 16px #a3b1c6,
+                0 -2px 8px #ffffff;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        .neumorphism-sidebar {
+            background: #e0e5ec;
+            box-shadow: 
+                4px 0 16px #a3b1c6,
+                -2px 0 8px #ffffff;
+            border-radius: 0 20px 20px 0;
+        }
+        
+        .neumorphism-nav {
+            background: #e0e5ec;
+            border-radius: 25px;
+            box-shadow: 
+                8px 8px 16px #a3b1c6,
+                -8px -8px 16px #ffffff;
+        }
+        
+        .nav-item-neumorphism {
+            border-radius: 15px;
+            margin: 6px 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item-neumorphism:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            transform: translateX(4px);
+        }
+        
+        .nav-item-neumorphism.active {
+            box-shadow: 
+                inset 6px 6px 12px #a3b1c6,
+                inset -6px -6px 12px #ffffff;
+            background: linear-gradient(145deg, #d1d9e6, #e0e5ec);
+        }
+        
+        .neumorphism-button {
+            background: #e0e5ec;
+            border: none;
+            border-radius: 15px;
+            color: #4a5568;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 
+                6px 6px 12px #a3b1c6,
+                -6px -6px 12px #ffffff;
+        }
+        
+        .neumorphism-button:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            transform: translateY(2px);
+        }
+        
+        .neumorphism-button:active {
+            box-shadow: 
+                inset 6px 6px 12px #a3b1c6,
+                inset -6px -6px 12px #ffffff;
+        }
+        
+        .neumorphism-progress {
+            background: #e0e5ec;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+        }
+        
+        .neumorphism-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+            box-shadow: 
+                2px 2px 4px #a3b1c6,
+                -2px -2px 4px #ffffff;
+        }
+        
+        .neumorphism-badge {
+            background: #e0e5ec;
+            color: #4a5568;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 12px;
+            box-shadow: 
+                3px 3px 6px #a3b1c6,
+                -3px -3px 6px #ffffff;
+        }
+        
+        .neumorphism-status {
+            background: #e0e5ec;
+            color: #4a5568;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 12px;
+            box-shadow: 
+                3px 3px 6px #a3b1c6,
+                -3px -3px 6px #ffffff;
+        }
+        
+        .neumorphism-divider {
+            height: 2px;
+            background: #e0e5ec;
+            border-radius: 1px;
+            margin: 20px 0;
+            box-shadow: 
+                inset 2px 2px 4px #a3b1c6,
+                inset -2px -2px 4px #ffffff;
+        }
+        
+        .neumorphism-activity {
+            padding: 16px;
+            border-radius: 15px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            background: #e0e5ec;
+            box-shadow: 
+                4px 4px 8px #a3b1c6,
+                -4px -4px 8px #ffffff;
+        }
+        
+        .neumorphism-activity:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            transform: translateX(4px);
+        }
+        
+        .neumorphism-activity.contact { border-left-color: #4299e1; }
+        .neumorphism-activity.ticket { border-left-color: #ed8936; }
+        .neumorphism-activity.campaign { border-left-color: #9f7aea; }
+        .neumorphism-activity.conversation { border-left-color: #48bb78; }
+        .neumorphism-activity.bot { border-left-color: #f56565; }
+        
+        .neumorphism-metric {
+            background: #e0e5ec;
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 
+                8px 8px 16px #a3b1c6,
+                -8px -8px 16px #ffffff;
+        }
+        
+        .neumorphism-metric:hover {
+            box-shadow: 
+                12px 12px 24px #a3b1c6,
+                -12px -12px 24px #ffffff;
+            transform: translateY(-4px);
+        }
+        
+        .neumorphism-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            font-size: 24px;
+            box-shadow: 
+                6px 6px 12px #a3b1c6,
+                -6px -6px 12px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .neumorphism-icon:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            transform: scale(0.95);
+        }
+        
+        .neumorphism-icon.blue { color: #4299e1; }
+        .neumorphism-icon.green { color: #48bb78; }
+        .neumorphism-icon.yellow { color: #ed8936; }
+        .neumorphism-icon.purple { color: #9f7aea; }
+        .neumorphism-icon.red { color: #f56565; }
+        .neumorphism-icon.orange { color: #ed8936; }
+        
+        .neumorphism-title {
+            font-weight: 700;
+            color: #2d3748;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+        
+        .neumorphism-text {
+            color: #4a5568;
+        }
+        
+        .neumorphism-text-primary {
+            color: #2d3748;
+        }
+        
+        .neumorphism-text-secondary {
+            color: #718096;
+        }
+        
+        .neumorphism-input {
+            background: #e0e5ec;
+            border: none;
+            border-radius: 15px;
+            padding: 12px 16px;
+            color: #4a5568;
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+        }
+        
+        .neumorphism-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 6px 6px 12px #a3b1c6,
+                inset -6px -6px 12px #ffffff;
+        }
+        
+        .neumorphism-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #e0e5ec;
+            border-radius: 15px;
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .neumorphism-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: #e0e5ec;
+            border-radius: 50%;
+            box-shadow: 
+                4px 4px 8px #a3b1c6,
+                -4px -4px 8px #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .neumorphism-toggle.active {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+        }
+        
+        .neumorphism-toggle.active::after {
+            transform: translateX(30px);
+            box-shadow: 
+                2px 2px 4px #a3b1c6,
+                -2px -2px 4px #ffffff;
+        }
+        
+        .neumorphism-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e0e5ec;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                8px 8px 16px #a3b1c6,
+                -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .neumorphism-fab:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+            transform: scale(0.95);
+        }
+        
+        .neumorphism-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e5ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                6px 6px 12px #a3b1c6,
+                -6px -6px 12px #ffffff;
+            color: #4a5568;
+            font-weight: 700;
+        }
+        
+        .neumorphism-avatar:hover {
+            box-shadow: 
+                inset 4px 4px 8px #a3b1c6,
+                inset -4px -4px 8px #ffffff;
+        }
+    </style>
+</head>
+<body class="neumorphism-bg min-h-screen">
+    <!-- Neumorphism Header -->
+    <header class="neumorphism-header sticky top-0 z-50 p-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="neumorphism-icon blue">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div>
+                    <h1 class="neumorphism-title text-xl">Flame AI CRM</h1>
+                    <p class="neumorphism-text-secondary text-sm">Neumorphism Edition</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-4">
+                    <button class="neumorphism-button p-3 rounded-full relative">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute -top-2 -right-2 neumorphism-badge">3</span>
+                    </button>
+                    <button class="neumorphism-button p-3 rounded-full relative">
+                        <i class="fas fa-envelope"></i>
+                        <span class="absolute -top-2 -right-2 neumorphism-badge">5</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <p class="neumorphism-text-primary text-sm font-medium">María González</p>
+                        <p class="neumorphism-text-secondary text-xs">Administradora</p>
+                    </div>
+                    <div class="neumorphism-avatar">
+                        <span class="text-sm">MG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Neumorphism Sidebar -->
+        <aside class="neumorphism-sidebar w-80 min-h-screen p-6">
+            <!-- User Profile -->
+            <div class="neumorphism-card p-6 mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="neumorphism-avatar">
+                        <span class="text-lg">MG</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="neumorphism-text-primary font-semibold">María González</h3>
+                        <p class="neumorphism-text-secondary text-sm">Administradora</p>
+                        <p class="neumorphism-text-secondary text-xs">ID: FLM-2024-001</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="neumorphism-card p-6 mb-6">
+                <h3 class="neumorphism-text-primary font-semibold mb-4">Acciones Rápidas</h3>
+                <div class="space-y-3">
+                    <button class="neumorphism-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Contacto
+                    </button>
+                    <button class="neumorphism-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-comment mr-2"></i>Nueva Conversación
+                    </button>
+                    <button class="neumorphism-button w-full py-3 px-4 text-sm">
+                        <i class="fas fa-ticket-alt mr-2"></i>Crear Ticket
+                    </button>
+                </div>
+            </div>
+
+            <div class="neumorphism-divider"></div>
+
+            <!-- Navigation -->
+            <nav class="space-y-4">
+                <div class="neumorphism-card p-4">
+                    <h3 class="neumorphism-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Principal</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-neumorphism active flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-chart-line mr-3 text-blue-500"></i>
+                            <span class="flex-1">Dashboard</span>
+                            <span class="neumorphism-status">Live</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-users mr-3 text-blue-500"></i>
+                            <span class="flex-1">Contactos</span>
+                            <span class="neumorphism-badge">1.2k</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-comments mr-3 text-green-500"></i>
+                            <span class="flex-1">Conversaciones</span>
+                            <span class="neumorphism-badge">24</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="neumorphism-card p-4">
+                    <h3 class="neumorphism-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Marketing</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-bullhorn mr-3 text-purple-500"></i>
+                            <span class="flex-1">Campañas</span>
+                            <span class="neumorphism-badge">5</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-bolt mr-3 text-yellow-500"></i>
+                            <span class="flex-1">Mensajes Rápidos</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-calendar mr-3 text-purple-500"></i>
+                            <span class="flex-1">Programaciones</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="neumorphism-card p-4">
+                    <h3 class="neumorphism-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Automatización</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-robot mr-3 text-green-500"></i>
+                            <span class="flex-1">Flujos de Bot</span>
+                            <span class="neumorphism-badge">12</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-list-ol mr-3 text-blue-500"></i>
+                            <span class="flex-1">Colas</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="neumorphism-card p-4">
+                    <h3 class="neumorphism-text-secondary text-xs font-semibold uppercase tracking-wider mb-4">Administración</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-user-cog mr-3 text-orange-500"></i>
+                            <span class="flex-1">Usuarios</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-cog mr-3 text-gray-500"></i>
+                            <span class="flex-1">Configuración</span>
+                        </a>
+                        <a href="#" class="nav-item-neumorphism flex items-center px-4 py-3 text-sm">
+                            <i class="fas fa-chart-bar mr-3 text-purple-500"></i>
+                            <span class="flex-1">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="neumorphism-card p-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="neumorphism-title text-3xl mb-2">Dashboard</h1>
+                        <p class="neumorphism-text-secondary">Bienvenido de vuelta, María. Aquí tienes un resumen de tu actividad.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="neumorphism-text-secondary text-sm">Sesión Activa</div>
+                        <div class="neumorphism-text-primary text-lg font-bold">2h 34m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="neumorphism-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="neumorphism-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="neumorphism-text-secondary text-xs">Estado</div>
+                            <div class="neumorphism-status">Online</div>
+                        </div>
+                    </div>
+                    <h3 class="neumorphism-text-primary text-3xl font-bold mb-2">1,247</h3>
+                    <p class="neumorphism-text-secondary text-sm mb-4">Contactos Totales</p>
+                    <div class="neumorphism-progress">
+                        <div class="neumorphism-progress-fill bg-blue-500" style="width: 85%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+12%</span>
+                        <span class="neumorphism-text-secondary">este mes</span>
+                    </div>
+                </div>
+
+                <div class="neumorphism-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="neumorphism-icon green">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="neumorphism-text-secondary text-xs">Estado</div>
+                            <div class="neumorphism-status">Activas</div>
+                        </div>
+                    </div>
+                    <h3 class="neumorphism-text-primary text-3xl font-bold mb-2">24</h3>
+                    <p class="neumorphism-text-secondary text-sm mb-4">Conversaciones Activas</p>
+                    <div class="neumorphism-progress">
+                        <div class="neumorphism-progress-fill bg-green-500" style="width: 60%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+8%</span>
+                        <span class="neumorphism-text-secondary">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="neumorphism-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="neumorphism-icon yellow">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="neumorphism-text-secondary text-xs">Estado</div>
+                            <div class="neumorphism-status">Pendientes</div>
+                        </div>
+                    </div>
+                    <h3 class="neumorphism-text-primary text-3xl font-bold mb-2">8</h3>
+                    <p class="neumorphism-text-secondary text-sm mb-4">Tickets Abiertos</p>
+                    <div class="neumorphism-progress">
+                        <div class="neumorphism-progress-fill bg-yellow-500" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-red-600 font-semibold">-3%</span>
+                        <span class="neumorphism-text-secondary">esta semana</span>
+                    </div>
+                </div>
+
+                <div class="neumorphism-metric">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="neumorphism-icon purple">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="neumorphism-text-secondary text-xs">Estado</div>
+                            <div class="neumorphism-status">Excelente</div>
+                        </div>
+                    </div>
+                    <h3 class="neumorphism-text-primary text-3xl font-bold mb-2">94%</h3>
+                    <p class="neumorphism-text-secondary text-sm mb-4">Tasa de Respuesta</p>
+                    <div class="neumorphism-progress">
+                        <div class="neumorphism-progress-fill bg-purple-500" style="width: 94%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span class="text-green-600 font-semibold">+2%</span>
+                        <span class="neumorphism-text-secondary">este mes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- System Metrics -->
+                <div class="neumorphism-card p-8">
+                    <h3 class="neumorphism-text-primary text-lg font-semibold mb-6 flex items-center">
+                        <i class="fas fa-server text-blue-500 mr-3"></i>
+                        Métricas del Sistema
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="p-6 neumorphism-card-inset">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="neumorphism-text-primary text-sm font-medium">Uso de CPU</span>
+                                <span class="text-blue-600 font-semibold">67%</span>
+                            </div>
+                            <div class="neumorphism-progress h-4">
+                                <div class="neumorphism-progress-fill bg-blue-500" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 neumorphism-card-inset">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="neumorphism-text-primary text-sm font-medium">Uso de Memoria</span>
+                                <span class="text-blue-600 font-semibold">42%</span>
+                            </div>
+                            <div class="neumorphism-progress h-4">
+                                <div class="neumorphism-progress-fill bg-blue-500" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 neumorphism-card-inset">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="neumorphism-text-primary text-sm font-medium">Carga de Red</span>
+                                <span class="text-blue-600 font-semibold">23%</span>
+                            </div>
+                            <div class="neumorphism-progress h-4">
+                                <div class="neumorphism-progress-fill bg-blue-500" style="width: 23%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 neumorphism-card-inset">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="neumorphism-text-primary text-sm font-medium">Procesamiento IA</span>
+                                <span class="text-blue-600 font-semibold">89%</span>
+                            </div>
+                            <div class="neumorphism-progress h-4">
+                                <div class="neumorphism-progress-fill bg-blue-500" style="width: 89%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="neumorphism-card p-8">
+                    <h3 class="neumorphism-text-primary text-lg font-semibold mb-6 flex items-center">
+                        <i class="fas fa-broadcast-tower text-green-500 mr-3"></i>
+                        Actividad Reciente
+                    </h3>
+                    <div class="space-y-4 max-h-80 overflow-y-auto">
+                        <div class="neumorphism-activity contact">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="neumorphism-text-primary text-sm font-medium">Nuevo contacto agregado</p>
+                                    <p class="neumorphism-text-secondary text-sm">Juan Pérez - hace 2 minutos</p>
+                                    <p class="neumorphism-text-secondary text-xs">ID: CON-2024-1247</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="neumorphism-activity ticket">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="neumorphism-text-primary text-sm font-medium">Ticket resuelto</p>
+                                    <p class="neumorphism-text-secondary text-sm">#TKT-2024-001 - hace 5 minutos</p>
+                                    <p class="neumorphism-text-secondary text-xs">Respuesta IA: 2.3s</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="neumorphism-activity campaign">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="neumorphism-text-primary text-sm font-medium">Campaña ejecutada</p>
+                                    <p class="neumorphism-text-secondary text-sm">Promoción de verano - hace 12 minutos</p>
+                                    <p class="neumorphism-text-secondary text-xs">Enviados: 1,247 | Abiertos: 89%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="neumorphism-activity conversation">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="neumorphism-text-primary text-sm font-medium">Nueva conversación</p>
+                                    <p class="neumorphism-text-secondary text-sm">María López - hace 15 minutos</p>
+                                    <p class="neumorphism-text-secondary text-xs">Canal: WhatsApp | Prioridad: Alta</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="neumorphism-activity bot">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-3 h-3 bg-red-500 rounded-full mt-2"></div>
+                                <div class="flex-1">
+                                    <p class="neumorphism-text-primary text-sm font-medium">Flujo de bot completado</p>
+                                    <p class="neumorphism-text-secondary text-sm">Onboarding - hace 20 minutos</p>
+                                    <p class="neumorphism-text-secondary text-xs">Tiempo promedio: 3.2s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="neumorphism-fab">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Neumorphism interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.nav-item-neumorphism');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Add press effect to buttons
+            const buttons = document.querySelectorAll('.neumorphism-button');
+            buttons.forEach(button => {
+                button.addEventListener('mousedown', function() {
+                    this.style.transform = 'translateY(2px)';
+                    this.style.boxShadow = 'inset 4px 4px 8px #a3b1c6, inset -4px -4px 8px #ffffff';
+                });
+                
+                button.addEventListener('mouseup', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
