@@ -73,11 +73,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   };
 
   return (
-    <div className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 z-50 ${
+    <div className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 z-50 flex flex-col ${
       isCollapsed ? 'w-16' : 'w-64'
     }`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      {/* Header - Fixed */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         {!isCollapsed && (
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             Flame AI CRM
@@ -91,9 +91,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         </button>
       </div>
 
-      {/* User Info */}
+      {/* User Info - Fixed */}
       {!isCollapsed && user && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-medium">
@@ -115,25 +115,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         </div>
       )}
 
-      {/* Menu Items */}
-      <nav className="mt-4 flex-1 overflow-y-auto">
-        <ul className="space-y-1">
+      {/* Menu Items - Scrollable */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden">
+        <ul className="space-y-1 p-2">
           {menuItems.map((item) => (
             <li key={item.path}>
               <Link
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                className={`flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200 rounded-lg ${
                   isActive(item.path)
                     ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
-                <span className="text-lg mr-3">{item.icon}</span>
+                <span className="text-lg mr-3 flex-shrink-0">{item.icon}</span>
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1">{item.name}</span>
+                    <span className="flex-1 truncate">{item.name}</span>
                     {item.badge && (
-                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 flex-shrink-0">
                         {item.badge}
                       </span>
                     )}
@@ -145,8 +145,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         </ul>
       </nav>
 
-      {/* Footer with Logout */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+      {/* Footer with Logout - Fixed */}
+      <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
         {!isCollapsed && (
           <button
             onClick={handleLogout}
