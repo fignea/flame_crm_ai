@@ -18,6 +18,8 @@ import {
   MessageCircle
 } from 'lucide-react';
 import NewConversationModal from '../components/NewConversationModal';
+import ImportContactsModal from '../components/ImportContactsModal';
+import ExportContactsModal from '../components/ExportContactsModal';
 import { useSidebar } from '../contexts/SidebarContext';
 
 const Contacts: React.FC = () => {
@@ -42,7 +44,8 @@ const Contacts: React.FC = () => {
     customerType: '',
     birthday: '',
     notes: '',
-    socials: ''
+    socials: '',
+    organizationId: ''
   });
   
   // Estados para modales y UI
@@ -64,10 +67,13 @@ const Contacts: React.FC = () => {
     status: '',
     customerType: '',
     socials: {},
-    notes: ''
+    notes: '',
+    organizationId: ''
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [viewContact, setViewContact] = useState<Contact | null>(null);
 
@@ -178,6 +184,18 @@ const Contacts: React.FC = () => {
     } catch (error: any) {
       toast.error(error.message || 'Error al actualizar el contacto');
     }
+  };
+
+  // Función para manejar importación exitosa
+  const handleImportSuccess = (result: any) => {
+    toast.success(`Importación completada: ${result.imported} contactos importados`);
+    if (result.duplicates > 0) {
+      toast.success(`${result.duplicates} contactos duplicados omitidos`);
+    }
+    if (result.errors > 0) {
+      toast.error(`${result.errors} errores durante la importación`);
+    }
+    loadContacts();
   };
 
   return (
@@ -407,12 +425,18 @@ const Contacts: React.FC = () => {
                 Filtros
               </button>
               
-              <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+              <button 
+                onClick={() => setShowExportModal(true)}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Exportar
               </button>
               
-              <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+              <button 
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Importar
               </button>
@@ -680,116 +704,300 @@ const Contacts: React.FC = () => {
 
       {/* Modales */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Crear Nuevo Contacto</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
-                  <input
-                    type="text"
-                    value={newContact.name}
-                    onChange={(e) => setNewContact({...newContact, name: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative p-6 border w-full max-w-2xl shadow-xl rounded-lg bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Crear Nuevo Contacto</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Información Básica */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Información Básica</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Nombre *
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.name}
+                      onChange={(e) => setNewContact({...newContact, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Ingrese el nombre completo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Teléfono *
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.number}
+                      onChange={(e) => setNewContact({...newContact, number: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="+54 9 11 1234-5678"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={newContact.email}
+                      onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="ejemplo@correo.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Fecha de Nacimiento
+                    </label>
+                    <input
+                      type="date"
+                      value={newContact.birthday}
+                      onChange={(e) => setNewContact({...newContact, birthday: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Estado
+                    </label>
+                    <select
+                      value={newContact.status}
+                      onChange={(e) => setNewContact({...newContact, status: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="">Seleccionar estado</option>
+                      <option value="activo">Activo</option>
+                      <option value="inactivo">Inactivo</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tipo de Cliente
+                    </label>
+                    <select
+                      value={newContact.customerType}
+                      onChange={(e) => setNewContact({...newContact, customerType: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="">Seleccionar tipo</option>
+                      <option value="lead">Lead</option>
+                      <option value="cliente">Cliente</option>
+                      <option value="proveedor">Proveedor</option>
+                      <option value="socio">Socio</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono *</label>
-                  <input
-                    type="text"
-                    value={newContact.number}
-                    onChange={(e) => setNewContact({...newContact, number: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
+              </div>
+
+              {/* Información Profesional */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Información Profesional</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Empresa
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.companyName}
+                      onChange={(e) => setNewContact({...newContact, companyName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Nombre de la empresa"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Cargo
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.position}
+                      onChange={(e) => setNewContact({...newContact, position: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Gerente, Director, etc."
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <input
-                    type="email"
-                    value={newContact.email}
-                    onChange={(e) => setNewContact({...newContact, email: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
+              </div>
+
+              {/* Información de Ubicación */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Información de Ubicación</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Dirección
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.address}
+                      onChange={(e) => setNewContact({...newContact, address: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Dirección completa"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Ciudad
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.city}
+                      onChange={(e) => setNewContact({...newContact, city: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Ciudad"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Provincia/Estado
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.state}
+                      onChange={(e) => setNewContact({...newContact, state: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Provincia o estado"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      País
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.country}
+                      onChange={(e) => setNewContact({...newContact, country: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="País"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Código Postal
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.postalCode}
+                      onChange={(e) => setNewContact({...newContact, postalCode: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Código postal"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Empresa</label>
-                  <input
-                    type="text"
-                    value={newContact.companyName}
-                    onChange={(e) => setNewContact({...newContact, companyName: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
+              </div>
+
+              {/* Redes Sociales */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Redes Sociales</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      value={newContact.socials?.linkedin || ''}
+                      onChange={(e) => setNewContact({
+                        ...newContact, 
+                        socials: { ...newContact.socials, linkedin: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="https://linkedin.com/in/usuario"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Facebook
+                    </label>
+                    <input
+                      type="url"
+                      value={newContact.socials?.facebook || ''}
+                      onChange={(e) => setNewContact({
+                        ...newContact, 
+                        socials: { ...newContact.socials, facebook: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="https://facebook.com/usuario"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Instagram
+                    </label>
+                    <input
+                      type="url"
+                      value={newContact.socials?.instagram || ''}
+                      onChange={(e) => setNewContact({
+                        ...newContact, 
+                        socials: { ...newContact.socials, instagram: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="https://instagram.com/usuario"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      X (Twitter)
+                    </label>
+                    <input
+                      type="url"
+                      value={newContact.socials?.x || ''}
+                      onChange={(e) => setNewContact({
+                        ...newContact, 
+                        socials: { ...newContact.socials, x: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="https://x.com/usuario"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Notas */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Notas Adicionales</h4>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cargo</label>
-                  <input
-                    type="text"
-                    value={newContact.position}
-                    onChange={(e) => setNewContact({...newContact, position: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ciudad</label>
-                  <input
-                    type="text"
-                    value={newContact.city}
-                    onChange={(e) => setNewContact({...newContact, city: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provincia</label>
-                  <input
-                    type="text"
-                    value={newContact.state}
-                    onChange={(e) => setNewContact({...newContact, state: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">País</label>
-                  <input
-                    type="text"
-                    value={newContact.country}
-                    onChange={(e) => setNewContact({...newContact, country: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de cliente</label>
-                  <input
-                    type="text"
-                    value={newContact.customerType}
-                    onChange={(e) => setNewContact({...newContact, customerType: e.target.value})}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notas</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Notas
+                  </label>
                   <textarea
                     value={newContact.notes}
                     onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
-                    rows={3}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Información adicional sobre el contacto..."
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCreateContact}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                >
-                  Crear
-                </button>
-              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateContact}
+                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Crear Contacto
+              </button>
             </div>
           </div>
         </div>
@@ -799,6 +1007,20 @@ const Contacts: React.FC = () => {
       <NewConversationModal
         isOpen={showNewConversationModal}
         onClose={() => setShowNewConversationModal(false)}
+      />
+
+      {/* Modal de importación de contactos */}
+      <ImportContactsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={handleImportSuccess}
+      />
+
+      {/* Modal de exportación de contactos */}
+      <ExportContactsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        currentFilters={filters}
       />
 
       {/* Modal de ver contacto */}

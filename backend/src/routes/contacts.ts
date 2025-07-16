@@ -1,8 +1,30 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
+import { permissions } from '../middleware/permissions';
 import { contactService } from '../services/contactService';
+import { contactImportExportService } from '../services/contactImportExportService';
+import multer from 'multer';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const router = Router();
+
+// Configurar multer para manejo de archivos
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const uploadsDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
 
 // Aplicar middleware de autenticación a todas las rutas
 router.use(authMiddleware);
@@ -238,6 +260,167 @@ router.delete('/:id/tags', async (req: any, res) => {
     return res.status(400).json({
       success: false,
       message: error.message || 'Error removiendo tags'
+    });
+  }
+});
+
+// POST /api/contacts/import/csv - Importar contactos desde CSV
+router.post('/import/csv', permissions.contacts.create, upload.single('file'), async (req: any, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionó archivo'
+      });
+    }
+
+    // Validar formato de archivo
+    if (!file.originalname.toLowerCase().endsWith('.csv')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Solo se permiten archivos CSV'
+      });
+    }
+
+    const result = await contactImportExportService.importContactsFromCSV(companyId, file.path);
+    
+    // Limpiar archivo temporal
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    return res.json(result);
+  } catch (error: any) {
+    console.error('Error importing CSV:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error importando contactos'
+    });
+  }
+});
+
+// POST /api/contacts/import/json - Importar contactos desde JSON
+router.post('/import/json', permissions.contacts.create, upload.single('file'), async (req: any, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionó archivo'
+      });
+    }
+
+    // Validar formato de archivo
+    if (!file.originalname.toLowerCase().endsWith('.json')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Solo se permiten archivos JSON'
+      });
+    }
+
+    const result = await contactImportExportService.importContactsFromJSON(companyId, file.path);
+    
+    // Limpiar archivo temporal
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    return res.json(result);
+  } catch (error: any) {
+    console.error('Error importing JSON:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error importando contactos'
+    });
+  }
+});
+
+// GET /api/contacts/export - Exportar contactos
+router.get('/export', permissions.contacts.export, async (req: any, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    const { format = 'csv', fields, ...filters } = req.query;
+    
+    const exportOptions: any = {
+      format: format as 'csv' | 'json',
+      filters
+    };
+    
+    if (fields) {
+      exportOptions.fields = (fields as string).split(',');
+    }
+
+    const filePath = await contactImportExportService.exportContacts(companyId, exportOptions);
+    
+    const fileName = path.basename(filePath);
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', format === 'csv' ? 'text/csv' : 'application/json');
+    
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+    
+    // Limpiar archivo después de enviarlo
+    fileStream.on('end', () => {
+      fs.unlinkSync(filePath);
+    });
+    
+    fileStream.on('error', (error) => {
+      console.error('Error streaming file:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al enviar archivo'
+      });
+    });
+
+  } catch (error: any) {
+    console.error('Error exporting contacts:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error exportando contactos'
+    });
+  }
+});
+
+// GET /api/contacts/template/csv - Obtener template CSV
+router.get('/template/csv', permissions.contacts.read, async (_req: any, res) => {
+  try {
+    const template = contactImportExportService.getCSVTemplate();
+    
+    res.setHeader('Content-Disposition', 'attachment; filename="contacts_template.csv"');
+    res.setHeader('Content-Type', 'text/csv');
+    
+    res.send(template);
+  } catch (error: any) {
+    console.error('Error getting CSV template:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error obteniendo template'
+    });
+  }
+});
+
+// POST /api/contacts/validate - Validar y deduplicar contactos
+router.post('/validate', permissions.contacts.update, async (req: any, res) => {
+  try {
+    const companyId = req.user?.companyId;
+    
+    const result = await contactImportExportService.validateAndDeduplicateContacts(companyId);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('Error validating contacts:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error validando contactos'
     });
   }
 });

@@ -167,6 +167,28 @@ model Company {
   dueDate     DateTime?
   recurrence  String?  // monthly, yearly
   
+  // Información de contacto
+  email       String?
+  phone       String?
+  website     String?
+  
+  // Información de dirección
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+  
+  // Información comercial
+  industry    String?   // Industria/Sector
+  companySize String?   // small, medium, large, enterprise
+  vatNumber   String?   // Número de IVA/RUT/CUIT
+  
+  // Información adicional
+  description String?   // Descripción de la empresa
+  notes       String?   // Notas internas
+  logo        String?   // URL del logo
+  
   // Configuraciones
   settings CompanySettings?
   
@@ -179,6 +201,7 @@ model Company {
   legacyTags LegacyTag[] // Para mantener la relación con las etiquetas antiguas
   campaigns Campaign[]
   botFlows BotFlow[]
+  organizations Organization[] // Organizaciones cliente gestionadas por esta empresa
   
   // Invitaciones de usuarios
   userInvitations UserInvitation[]
@@ -188,6 +211,48 @@ model Company {
   updatedAt DateTime @updatedAt
 
   @@map("companies")
+}
+
+// Modelo de Organizaciones Cliente (diferentes a las Company que usan el sistema)
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  
+  // Información de contacto
+  email       String?
+  phone       String?
+  website     String?
+  
+  // Información de dirección
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+  
+  // Información comercial
+  industry    String?   // Industria/Sector
+  companySize String?   // small, medium, large, enterprise
+  vatNumber   String?   // Número de IVA/RUT/CUIT
+  
+  // Información adicional
+  description String?   // Descripción de la empresa
+  notes       String?   // Notas internas
+  logo        String?   // URL del logo
+  status      String    @default("active") // active, inactive
+  
+  // Relaciones
+  companyId String  // Empresa que gestiona esta organización
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  contacts  Contact[] @relation("OrganizationContacts")
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, companyId])
+  @@map("organizations")
 }
 
 // Modelo de Conexiones (reemplaza el modelo Whatsapp)
@@ -255,6 +320,10 @@ model Contact {
   // Relaciones
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Relación opcional con organización cliente
+  organizationId String?
+  organization   Organization? @relation("OrganizationContacts", fields: [organizationId], references: [id], onDelete: SetNull)
   
   tickets    Ticket[]
   messages   Message[]

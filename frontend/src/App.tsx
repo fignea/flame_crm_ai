@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import Contacts from './pages/Contacts';
+import Organizations from './pages/Organizations';
 import Settings from './pages/Settings';
 import Connections from './pages/Connections';
 import QuickMessages from './pages/QuickMessages';
@@ -79,6 +80,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Contacts />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/organizations" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Organizations />
                 </Layout>
               </ProtectedRoute>
             } />

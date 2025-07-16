@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "companies" ADD COLUMN     "address" TEXT,
+ADD COLUMN     "city" TEXT,
+ADD COLUMN     "companySize" TEXT,
+ADD COLUMN     "country" TEXT,
+ADD COLUMN     "description" TEXT,
+ADD COLUMN     "email" TEXT,
+ADD COLUMN     "industry" TEXT,
+ADD COLUMN     "logo" TEXT,
+ADD COLUMN     "notes" TEXT,
+ADD COLUMN     "phone" TEXT,
+ADD COLUMN     "postalCode" TEXT,
+ADD COLUMN     "state" TEXT,
+ADD COLUMN     "vatNumber" TEXT,
+ADD COLUMN     "website" TEXT;

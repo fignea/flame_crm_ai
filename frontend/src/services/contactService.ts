@@ -26,6 +26,11 @@ export interface Contact {
     x?: string;
   };
   notes?: string;
+  organizationId?: string;
+  organization?: {
+    id: string;
+    name: string;
+  };
   tags: Array<{
     id: string;
     attribute: string;
@@ -66,6 +71,7 @@ export interface ContactCreateData {
     x?: string;
   };
   notes?: string;
+  organizationId?: string;
 }
 
 export interface ContactUpdateData {
@@ -109,6 +115,7 @@ export interface ContactFilters {
   birthday?: string;
   notes?: string;
   socials?: string;
+  organizationId?: string;
 }
 
 export interface ContactStats {
@@ -143,6 +150,7 @@ export const contactService = {
     if (filters.birthday) params.append('birthday', filters.birthday);
     if (filters.notes) params.append('notes', filters.notes);
     if (filters.socials) params.append('socials', filters.socials);
+    if (filters.organizationId) params.append('organizationId', filters.organizationId);
 
     const response = await api.get<ApiResponse<PaginatedResponse<Contact>>>(`/contacts?${params.toString()}`);
     if (!response.data.data) {
