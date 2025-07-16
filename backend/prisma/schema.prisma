@@ -17,11 +17,15 @@ model User {
   name      String
   email     String   @unique
   password  String
-  profile   String   @default("user") // admin, user, manager
+  profile   String   @default("user") // admin, user, manager - se mantendrá por compatibilidad
   avatar    String?
   isActive  Boolean  @default(true)
   isOnline  Boolean  @default(false)
   lastSeen  DateTime @default(now())
+  
+  // Nuevo sistema de roles
+  roleId    String?
+  role      Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
   
   // Relaciones
   companyId String
@@ -36,11 +40,122 @@ model User {
   // Configuraciones del usuario
   userSettings UserSettings?
   
+  // Auditoría
+  activityLogs UserActivityLog[]
+  
+  // Invitaciones enviadas
+  sentInvitations UserInvitation[] @relation("InvitedBy")
+  
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+// Modelo de Roles
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // super_admin, admin, manager, agent, guest
+  displayName String   // "Super Administrador", "Administrador", etc.
+  description String?
+  color       String?  // Color para la UI
+  isSystemRole Boolean @default(false) // Roles del sistema que no se pueden eliminar
+  isActive    Boolean  @default(true)
+  
+  // Relaciones
+  users       User[]
+  permissions RolePermission[]
+  invitations UserInvitation[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roles")
+}
+
+// Modelo de Permisos
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique // users.create, users.read, users.update, users.delete
+  module      String   // users, contacts, conversations, tickets, etc.
+  action      String   // create, read, update, delete, export, import
+  description String?
+  
+  // Relaciones
+  roles RolePermission[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("permissions")
+}
+
+// Modelo de relación Rol-Permiso
+model RolePermission {
+  roleId       String
+  role         Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// Modelo de Logs de Actividad
+model UserActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  action    String   // login, logout, create_user, update_user, delete_contact, etc.
+  module    String   // auth, users, contacts, conversations, etc.
+  details   Json?    // Detalles adicionales de la acción
+  ipAddress String?
+  userAgent String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@map("user_activity_logs")
+}
+
+// Modelo de Invitaciones
+model UserInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  roleId    String?
+  role      Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  
+  // Usuario que envió la invitación
+  invitedById String
+  invitedBy   User @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+  
+  // Empresa a la que se invita
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Estado de la invitación
+  status    String   @default("pending") // pending, accepted, rejected, expired
+  token     String   @unique // Token único para la invitación
+  message   String?  // Mensaje personalizado
+  
+  // Fechas
+  expiresAt DateTime
+  acceptedAt DateTime?
+  rejectedAt DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_invitations")
 }
 
 // Modelo de Empresas
@@ -64,6 +179,9 @@ model Company {
   legacyTags LegacyTag[] // Para mantener la relación con las etiquetas antiguas
   campaigns Campaign[]
   botFlows BotFlow[]
+  
+  // Invitaciones de usuarios
+  userInvitations UserInvitation[]
   
   // Timestamps
   createdAt DateTime @default(now())

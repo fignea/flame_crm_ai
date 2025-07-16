@@ -16,7 +16,8 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import Tags from './pages/Tags';
 import Schedules from './pages/Schedules';
 import BotFlows from './pages/BotFlows';
-import { Megaphone, ListTodo, User, BarChart2, FileText, HelpCircle } from 'lucide-react';
+import Users from './pages/Users';
+import { Megaphone, ListTodo, BarChart2, FileText, HelpCircle } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import './styles/globals.css';
 
@@ -157,11 +158,7 @@ function App() {
             <Route path="/users" element={
               <ProtectedRoute>
                 <Layout>
-                  <PlaceholderPage 
-                    title="Usuarios" 
-                    description="Administra usuarios del sistema" 
-                    icon={<User size={48} />} 
-                  />
+                  <Users />
                 </Layout>
               </ProtectedRoute>
             } />
