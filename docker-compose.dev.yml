@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: bitnami/postgresql:15
+    container_name: flame_ai_postgres_dev
+    environment:
+      POSTGRESQL_USERNAME: flame_ai_user
+      POSTGRESQL_PASSWORD: flame_ai_pass
+      POSTGRESQL_DATABASE: flame_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - flame_ai_network_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flame_ai_user -d flame_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: flame_ai_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - flame_ai_network_dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Backend API con hot reload
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: flame_ai_backend_dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://flame_ai_user:flame_ai_pass@postgres:5432/flame_ai?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: flame-ai-dev-jwt-secret-key-2024
+      JWT_REFRESH_SECRET: flame-ai-dev-refresh-jwt-secret-key-2024
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_IN: 30d
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:8080
+      PORT: 8080
+      LOG_LEVEL: info
+      HOT_RELOAD: true
+      DEBUG_MODE: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flame_ai_network_dev
+    volumes:
+      # Volúmenes para hot reload
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+      - ./backend/sessions:/app/sessions
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./backend/nodemon.json:/app/nodemon.json
+      # Excluir node_modules para evitar conflictos
+      - /app/node_modules
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Frontend React con hot reload
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: flame_ai_frontend_dev
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+      VITE_BACKEND_URL: http://localhost:8080
+      VITE_APP_NAME: Flame AI CRM
+      NODE_ENV: development
+      HOT_RELOAD: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - flame_ai_network_dev
+    volumes:
+      # Volúmenes para hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      # Excluir node_modules para evitar conflictos
+      - /app/node_modules
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+
+networks:
+  flame_ai_network_dev:
+    driver: bridge
+
+# Comandos útiles para desarrollo:
+# docker-compose -f docker-compose.dev.yml up -d
+# docker-compose -f docker-compose.dev.yml logs -f backend
+# docker-compose -f docker-compose.dev.yml exec backend npm run test
+# docker-compose -f docker-compose.dev.yml down --volumes 
