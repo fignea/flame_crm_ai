@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { authService } from './authService';
 import { logger } from '../utils/logger';
 import { prisma } from '../prisma/client';
+import AgentStatusService from './agentStatusService';
 
 let io: Server | null = null;
 
@@ -53,7 +54,7 @@ export const setupSocketIO = (server: any): void => {
     }
   });
 
-  io.on('connection', (socket: AuthenticatedSocket) => {
+  io.on('connection', async (socket: AuthenticatedSocket) => {
     logger.info(`Usuario conectado: ${socket.id}, userId: ${socket.userId}`);
 
     // La unión a la sala ahora se hace en el middleware
@@ -61,10 +62,46 @@ export const setupSocketIO = (server: any): void => {
     // a menos que se necesiten notificaciones directas y privadas.
     if (socket.userId) {
       socket.join(socket.userId);
+      
+      // Actualizar estado del agente a online cuando se conecta
+      try {
+        const user = await prisma.user.findUnique({ where: { id: socket.userId } });
+        if (user && user.companyId) {
+          await AgentStatusService.setUserOnlineStatus(socket.userId, user.companyId, true);
+        }
+      } catch (error) {
+        logger.error('Error actualizando estado online:', error);
+      }
     }
 
-    socket.on('disconnect', () => {
+    // Escuchar eventos de actividad para resetear timer de auto-ausente
+    socket.on('user_activity', async () => {
+      if (socket.userId) {
+        try {
+          const user = await prisma.user.findUnique({ where: { id: socket.userId } });
+          if (user && user.companyId) {
+            await AgentStatusService.resetActivityTimer(socket.userId, user.companyId);
+          }
+        } catch (error) {
+          logger.error('Error reseteando timer de actividad:', error);
+        }
+      }
+    });
+
+    socket.on('disconnect', async () => {
       logger.info(`Usuario desconectado: ${socket.id}, userId: ${socket.userId}`);
+      
+      // Actualizar estado del agente a offline cuando se desconecta
+      if (socket.userId) {
+        try {
+          const user = await prisma.user.findUnique({ where: { id: socket.userId } });
+          if (user && user.companyId) {
+            await AgentStatusService.setUserOnlineStatus(socket.userId, user.companyId, false);
+          }
+        } catch (error) {
+          logger.error('Error actualizando estado offline:', error);
+        }
+      }
     });
   });
 }; 

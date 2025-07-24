@@ -1,0 +1,106 @@
+{
+  "name": "flame-ai-crm",
+  "version": "1.0.0",
+  "description": "Sistema CRM con IA conversacional para gestión de chat multi-plataforma",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "npm run start:backend",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run preview",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:unit": "npm run test:unit:backend && npm run test:unit:frontend",
+    "test:unit:backend": "cd backend && npm run test:unit",
+    "test:unit:frontend": "cd frontend && npm run test:unit",
+    "test:integration": "cd backend && npm run test:integration",
+    "test:e2e": "cd frontend && npm run test:e2e",
+    "test:coverage": "npm run test:coverage:backend && npm run test:coverage:frontend",
+    "test:coverage:backend": "cd backend && npm run test:coverage",
+    "test:coverage:frontend": "cd frontend && npm run test:coverage",
+    "test:watch": "concurrently \"npm run test:watch:backend\" \"npm run test:watch:frontend\"",
+    "test:watch:backend": "cd backend && npm run test:watch",
+    "test:watch:frontend": "cd frontend && npm run test:watch",
+    "test:performance": "cd frontend && npm run test:performance",
+    "test:accessibility": "cd frontend && npm run test:accessibility",
+    "test:security": "npm run test:security:backend && npm run test:security:frontend",
+    "test:security:backend": "cd backend && npm run test:security",
+    "test:security:frontend": "cd frontend && npm run test:security",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
+    "lint:fix:frontend": "cd frontend && npm run lint:fix",
+    "type-check": "npm run type-check:backend && npm run type-check:frontend",
+    "type-check:backend": "cd backend && npm run type-check",
+    "type-check:frontend": "cd frontend && npm run type-check",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "cd backend && npm run db:migrate",
+    "db:seed": "cd backend && npm run db:seed",
+    "db:reset": "cd backend && npm run db:reset",
+    "db:studio": "cd backend && npm run db:studio",
+    "setup": "npm install && npm run setup:backend && npm run setup:frontend",
+    "setup:backend": "cd backend && npm install",
+    "setup:frontend": "cd frontend && npm install",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd backend && npm run clean",
+    "clean:frontend": "cd frontend && npm run clean",
+    "postinstall": "npm run setup"
+  },
+  "keywords": [
+    "crm",
+    "chat",
+    "whatsapp",
+    "ai",
+    "conversational",
+    "customer-service",
+    "multi-platform"
+  ],
+  "author": "Flame AI Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.2",
+    "prettier": "^3.0.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flame-ai/crm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flame-ai/crm/issues"
+  },
+  "homepage": "https://github.com/flame-ai/crm#readme",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run test && npm run type-check"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
+} 

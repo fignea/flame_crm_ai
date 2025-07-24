@@ -94,8 +94,8 @@ export interface ContactCreateRequest {
 // Tipos de tickets
 export interface Ticket {
   id: string;
-  status: 'open' | 'pending' | 'waiting' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: TicketStatus;
+  priority: TicketPriority;
   category?: string;
   subject?: string;
   lastMessage?: string;
@@ -112,17 +112,20 @@ export interface Ticket {
   updatedAt: string;
 }
 
+export type TicketStatus = 'open' | 'pending' | 'waiting' | 'closed';
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+
 export interface TicketCreateRequest {
   contactId: string;
   whatsappId: string;
   subject?: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: TicketPriority;
   category?: string;
 }
 
 export interface TicketUpdateRequest {
-  status?: 'open' | 'pending' | 'waiting' | 'closed';
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  status?: TicketStatus;
+  priority?: TicketPriority;
   category?: string;
   subject?: string;
   userId?: string;
@@ -299,4 +302,73 @@ export interface AutoMessageScheduleCreateRequest {
   timeRanges: Array<{ from: string; to: string }>;
   daysOfWeek: number[];
   isActive?: boolean;
+} 
+
+// Tipos de Bot Flows
+export interface BotFlow {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  steps?: BotFlowStep[];
+  conditions?: BotFlowCondition[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BotFlowStep {
+  id: string;
+  name: string;
+  type: 'message' | 'condition' | 'action' | 'delay';
+  config: Record<string, any>;
+  order: number;
+  botFlowId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BotFlowCondition {
+  id: string;
+  name: string;
+  description?: string;
+  conditionType: 'text_match' | 'keyword' | 'intent' | 'time';
+  parameters: Record<string, any>;
+  botFlowId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Tipos de conversaciones
+export interface Conversation {
+  id: string;
+  contact: Contact;
+  connection: Connection;
+  user: User;
+  unreadCount: number;
+  lastMessage: string;
+  updatedAt: string;
+  messages?: Message[];
+}
+
+export interface Connection {
+  id: string;
+  name: string;
+  type: 'whatsapp_web' | 'whatsapp_business' | 'instagram' | 'facebook';
+  status: 'connected' | 'disconnected' | 'connecting';
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Tipos de notificaciones
+export interface Notification {
+  id: string;
+  type: 'message' | 'ticket' | 'warning' | 'error' | 'success' | 'assignment' | 'system';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  read: boolean;
+  createdAt: Date;
+  userId: string;
+  companyId: string;
 } 

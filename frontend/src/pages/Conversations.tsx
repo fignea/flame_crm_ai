@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
-  Search, 
   MessageSquare, 
   Send, 
   MoreVertical, 
@@ -11,12 +10,20 @@ import {
   AlertCircle, 
   Clock,
   Tag,
-  ChevronUp
+  ChevronUp,
+  Users,
+  Edit3
 } from 'lucide-react';
 import { useSocket } from '../contexts/SocketContext';
 import conversationService, { Conversation, Message } from '../services/conversationService';
-import { connectionService } from '../services/connectionService';
 import ConvertToTicketModal from '../components/ConvertToTicketModal';
+import ConversationAssignmentModal from '../components/ConversationAssignmentModal';
+import notificationService from '../services/notificationService';
+import MessageTemplateSelector from '../components/MessageTemplateSelector';
+import MessageTemplateManager from '../components/MessageTemplateManager';
+import messageTemplateService, { MessageTemplate } from '../services/messageTemplateService';
+import ConversationFilters from '../components/ConversationFilters';
+import AgentStatusWidget from '../components/AgentStatusWidget';
 
 const Conversations: React.FC = () => {
   const { socket } = useSocket();
@@ -28,11 +35,19 @@ const Conversations: React.FC = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedConnection, setSelectedConnection] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [connections, setConnections] = useState<any[]>([]);
+  const [conversationFilters, setConversationFilters] = useState<any>({
+    page: 1,
+    limit: 20,
+    sortBy: 'updatedAt',
+    sortOrder: 'desc'
+  });
+  const [conversationStats, setConversationStats] = useState<any>(null);
   const [showConvertToTicketModal, setShowConvertToTicketModal] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [assignmentModalMode, setAssignmentModalMode] = useState<'assign' | 'transfer'>('assign');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [templateSelectorPosition, setTemplateSelectorPosition] = useState<{ top: number; left: number } | undefined>();
   
   // Refs para scroll y focus
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -56,29 +71,16 @@ const Conversations: React.FC = () => {
   const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
-      const filters: any = {};
-      if (searchTerm) filters.search = searchTerm;
-      if (selectedConnection !== 'all') filters.connectionId = selectedConnection;
-      if (selectedStatus !== 'all') filters.status = selectedStatus;
-      
-      const response = await conversationService.getConversations(filters);
+      const response = await conversationService.getConversations(conversationFilters);
       setConversations(response.conversations || []);
+      setConversationStats(response.stats || null);
     } catch (error) {
       console.error('Error loading conversations:', error);
       toast.error('Error al cargar las conversaciones');
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, selectedConnection, selectedStatus]);
-
-  const loadConnections = useCallback(async () => {
-    try {
-      const response = await connectionService.getAll();
-      setConnections(response.data || []);
-    } catch (error) {
-      console.error('Error loading connections:', error);
-    }
-  }, []);
+  }, [conversationFilters]);
 
   // Función para cargar mensajes con paginación
   const loadMessages = useCallback(async (conversationId: string, page: number = 1, append: boolean = false) => {
@@ -140,8 +142,7 @@ const Conversations: React.FC = () => {
 
   useEffect(() => {
     loadConversations();
-    loadConnections();
-  }, [loadConversations, loadConnections]);
+  }, [loadConversations]);
 
   useEffect(() => {
     if (socket) {
@@ -153,7 +154,20 @@ const Conversations: React.FC = () => {
           return;
         }
 
-        toast.success(`Nuevo mensaje de ${newMessage.contact.name}`);
+        // Usar el servicio de notificaciones mejorado
+        notificationService.sendNotification({
+          type: 'message',
+          title: `Nuevo mensaje de ${newMessage.contact.name}`,
+          message: newMessage.content,
+          userId: 'current', // Se obtendrá del contexto de auth
+          companyId: 'current', // Se obtendrá del contexto de auth
+          priority: 'medium',
+          persistent: false,
+          channels: ['websocket', 'push', 'desktop'],
+          entityId: newMessage.conversationId,
+          entityType: 'conversation'
+        });
+        
         setConversations(prev => {
           const convoIndex = prev.findIndex(c => c.id === newMessage.conversationId);
           if (convoIndex !== -1) {
@@ -178,6 +192,56 @@ const Conversations: React.FC = () => {
             scrollToBottom();
           }, 100);
         }
+      };
+
+      // Listener para asignación de conversaciones
+      const handleConversationAssigned = (data: any) => {
+        console.log('[Socket] Conversación asignada:', data);
+        toast.success(`Conversación asignada a ${data.agent.name}`);
+        loadConversations();
+      };
+
+      // Listener para transferencia de conversaciones
+      const handleConversationTransferred = (data: any) => {
+        console.log('[Socket] Conversación transferida:', data);
+        toast.success(`Conversación transferida de ${data.from.name} a ${data.to.name}`);
+        loadConversations();
+      };
+
+      // Listener para nuevas asignaciones (al usuario actual)
+      const handleNewConversationAssigned = (data: any) => {
+        console.log('[Socket] Nueva conversación asignada:', data);
+        notificationService.sendNotification({
+          type: 'assignment',
+          title: 'Conversación asignada',
+          message: `Te han asignado una conversación con ${data.conversation.contact.name}`,
+          userId: 'current',
+          companyId: 'current',
+          priority: 'high',
+          persistent: true,
+          channels: ['websocket', 'push', 'desktop'],
+          entityId: data.conversation.id,
+          entityType: 'conversation'
+        });
+        loadConversations();
+      };
+
+      // Listener para transferencias entrantes (al usuario actual)
+      const handleConversationTransferredIn = (data: any) => {
+        console.log('[Socket] Conversación transferida a mí:', data);
+        notificationService.sendNotification({
+          type: 'assignment',
+          title: 'Conversación transferida',
+          message: `${data.from?.name || 'Agente'} te ha transferido una conversación con ${data.conversation.contact.name}`,
+          userId: 'current',
+          companyId: 'current',
+          priority: 'high',
+          persistent: true,
+          channels: ['websocket', 'push', 'desktop'],
+          entityId: data.conversation.id,
+          entityType: 'conversation'
+        });
+        loadConversations();
       };
 
       // Listener para actualizaciones de mensajes (ej. reacciones y estados)
@@ -227,14 +291,26 @@ const Conversations: React.FC = () => {
       // Limpiar listeners anteriores antes de agregar nuevos
       socket.off('newMessage');
       socket.off('messageUpdated');
+      socket.off('conversationAssigned');
+      socket.off('conversationTransferred');
+      socket.off('newConversationAssigned');
+      socket.off('conversationTransferredIn');
       
       // Agregar nuevos listeners
       socket.on('newMessage', handleNewMessage);
       socket.on('messageUpdated', handleMessageUpdated);
+      socket.on('conversationAssigned', handleConversationAssigned);
+      socket.on('conversationTransferred', handleConversationTransferred);
+      socket.on('newConversationAssigned', handleNewConversationAssigned);
+      socket.on('conversationTransferredIn', handleConversationTransferredIn);
 
       return () => {
         socket.off('newMessage', handleNewMessage);
         socket.off('messageUpdated', handleMessageUpdated);
+        socket.off('conversationAssigned', handleConversationAssigned);
+        socket.off('conversationTransferred', handleConversationTransferred);
+        socket.off('newConversationAssigned', handleNewConversationAssigned);
+        socket.off('conversationTransferredIn', handleConversationTransferredIn);
       };
     }
   }, [socket, selectedConversation?.id, loadConversations, scrollToBottom, sortMessages]); // Remover loadConversations de las dependencias
@@ -284,9 +360,13 @@ const Conversations: React.FC = () => {
 
     setSendingMessage(true);
     try {
+      // Procesar atajos de plantillas antes de enviar
+      const shortcutProcessed = await handleTemplateShortcut(newMessage);
+      const messageToSend = shortcutProcessed ? newMessage : newMessage;
+      
       const response = await conversationService.sendMessage(
         selectedConversation.id,
-        newMessage
+        messageToSend
       );
       setMessages(prev => sortMessages([...prev, response]));
       setNewMessage('');
@@ -334,6 +414,65 @@ const Conversations: React.FC = () => {
     });
   };
 
+  const handleAssignConversation = () => {
+    setAssignmentModalMode('assign');
+    setShowAssignmentModal(true);
+  };
+
+  const handleTransferConversation = () => {
+    setAssignmentModalMode('transfer');
+    setShowAssignmentModal(true);
+  };
+
+  // Funciones para plantillas de mensajes
+  const handleTemplateSelect = useCallback((template: MessageTemplate) => {
+    setNewMessage(template.content);
+    setShowTemplateSelector(false);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  }, []);
+
+  const handleShowTemplateSelector = useCallback(() => {
+    setShowTemplateSelector(true);
+    setTemplateSelectorPosition(undefined);
+  }, []);
+
+  const handleTemplateShortcut = useCallback(async (message: string) => {
+    // Buscar atajos en el mensaje
+    const shortcutMatch = message.match(/^\/(\w+)/);
+    if (shortcutMatch) {
+      const shortcut = `/${shortcutMatch[1]}`;
+      try {
+        const template = await messageTemplateService.getTemplateByShortcut(shortcut);
+        if (template) {
+          // Reemplazar el shortcut con el contenido de la plantilla
+          const newMessage = message.replace(shortcut, template.content);
+          setNewMessage(newMessage);
+          // Incrementar contador de uso
+          await messageTemplateService.incrementUsage(template.id);
+          return true;
+        }
+      } catch (error) {
+        console.error('Error processing template shortcut:', error);
+      }
+    }
+    return false;
+  }, []);
+
+  const handleConvertToTicket = async () => {
+    if (!selectedConversation) return;
+    
+    try {
+      await conversationService.convertToTicket(selectedConversation.id, ['Ticket from conversation']);
+      setShowConvertToTicketModal(false);
+      // Recargar conversaciones
+      loadConversations();
+    } catch (error) {
+      console.error('Error converting to ticket:', error);
+    }
+  };
+
   return (
     <div className="flex h-full bg-gray-50 dark:bg-gray-900">
       {/* Sidebar - Lista de conversaciones */}
@@ -345,6 +484,7 @@ const Conversations: React.FC = () => {
               Conversaciones
             </h1>
             <div className="flex items-center space-x-2">
+              <AgentStatusWidget compact={true} showTeamStats={false} />
               <button onClick={loadConversations} className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -354,45 +494,14 @@ const Conversations: React.FC = () => {
             </div>
           </div>
 
-          {/* Filtros */}
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Buscar conversaciones..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <select
-                value={selectedConnection}
-                onChange={(e) => setSelectedConnection(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              >
-                <option value="all">Todas las conexiones</option>
-                {connections.map(conn => (
-                  <option key={conn.id} value={conn.id}>
-                    {conn.name}
-                  </option>
-                ))}
-              </select>
-              
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              >
-                <option value="all">Todos</option>
-                <option value="unread">No leídos</option>
-                <option value="read">Leídos</option>
-              </select>
-            </div>
-          </div>
         </div>
+
+        {/* Filtros Avanzados */}
+        <ConversationFilters
+          onFiltersChange={setConversationFilters}
+          initialFilters={conversationFilters}
+          stats={conversationStats}
+        />
 
         {/* Lista de conversaciones */}
         <div className="overflow-y-auto flex-1">
@@ -486,15 +595,37 @@ const Conversations: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {!selectedConversation.ticket && (
-                <button
-                  onClick={() => setShowConvertToTicketModal(true)}
-                  className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center"
-                >
-                  <Tag className="w-4 h-4 mr-2" />
-                  Convertir a Ticket
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {!selectedConversation.ticket && (
+                  <button
+                    onClick={() => setShowConvertToTicketModal(true)}
+                    className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center"
+                  >
+                    <Tag className="w-4 h-4 mr-2" />
+                    Convertir a Ticket
+                  </button>
+                )}
+                
+                {!selectedConversation.user && (
+                  <button
+                    onClick={handleAssignConversation}
+                    className="px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Asignar
+                  </button>
+                )}
+                
+                {selectedConversation.user && (
+                  <button
+                    onClick={handleTransferConversation}
+                    className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 flex items-center"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Transferir
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Lista de mensajes con scroll infinito */}
@@ -575,6 +706,20 @@ const Conversations: React.FC = () => {
                   disabled={sendingMessage || loadingMessages}
                 />
                 <button
+                  onClick={handleShowTemplateSelector}
+                  className="px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  title="Usar plantilla"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowTemplateManager(true)}
+                  className="px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  title="Gestionar plantillas"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || sendingMessage || loadingMessages}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -602,11 +747,36 @@ const Conversations: React.FC = () => {
       <ConvertToTicketModal
         isOpen={showConvertToTicketModal}
         onClose={() => setShowConvertToTicketModal(false)}
-        onSuccess={() => {
-          toast.success('Ticket creado! La lista se actualizará.');
-          loadConversations();
-        }}
-        conversation={selectedConversation}
+        onConvert={handleConvertToTicket}
+        contactName={selectedConversation?.contact.name || ''}
+      />
+
+      {/* Modal de asignación de conversación */}
+      {selectedConversation && (
+        <ConversationAssignmentModal
+          isOpen={showAssignmentModal}
+          onClose={() => setShowAssignmentModal(false)}
+          conversationId={selectedConversation.id}
+          currentAgentId={selectedConversation.user?.id}
+          currentAgentName={selectedConversation.user?.name}
+          contactName={selectedConversation.contact.name}
+          mode={assignmentModalMode}
+        />
+      )}
+
+      {/* Selector de plantillas */}
+      <MessageTemplateSelector
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        onSelectTemplate={handleTemplateSelect}
+        currentMessage={newMessage}
+        position={templateSelectorPosition}
+      />
+
+      {/* Gestor de plantillas */}
+      <MessageTemplateManager
+        isOpen={showTemplateManager}
+        onClose={() => setShowTemplateManager(false)}
       />
     </div>
   );

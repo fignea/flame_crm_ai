@@ -1,129 +1,122 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
-import { X, Tag } from 'lucide-react';
-
-import { Conversation } from '../services/conversationService';
-import tagService, { Tag as TagType } from '../services/tagService';
-import conversationService from '../services/conversationService';
+import React, { useState } from 'react';
+import { Ticket, TicketPriority, TicketStatus } from '../types/api';
 
 interface ConvertToTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (ticket: any) => void;
-  conversation: Conversation | null;
+  onConvert: (ticketData: Partial<Ticket>) => void;
+  contactName: string;
+  onSuccess?: () => void;
 }
 
-const ConvertToTicketModal: React.FC<ConvertToTicketModalProps> = ({ isOpen, onClose, onSuccess, conversation }) => {
-  const [tags, setTags] = useState<TagType[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isConverting, setIsConverting] = useState(false);
-  const [subject, setSubject] = useState('');
+const ConvertToTicketModal: React.FC<ConvertToTicketModalProps> = ({
+  isOpen,
+  onClose,
+  onConvert,
+  contactName
+}) => {
+  const [formData, setFormData] = useState({
+    subject: '',
+    priority: 'medium' as TicketPriority,
+    status: 'open' as TicketStatus,
+    assignedTo: ''
+  });
 
-  useEffect(() => {
-    if (isOpen) {
-      const fetchTags = async () => {
-        try {
-          const fetchedTags = await tagService.getTags();
-          setTags(fetchedTags);
-        } catch (error) {
-          toast.error('Error al cargar los tags');
-          console.error(error);
-        }
-      };
-      fetchTags();
-    }
-  }, [isOpen]);
-
-  const handleToggleTag = (tagId: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
-    );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onConvert({
+      subject: formData.subject,
+      priority: formData.priority,
+      status: formData.status
+    });
+    onClose();
   };
 
-  const handleConvert = async () => {
-    if (!conversation) return;
-    if (!subject.trim()) {
-      toast.error('El título del ticket es obligatorio');
-      return;
-    }
-    setIsConverting(true);
-    try {
-      const newTicket = await conversationService.convertToTicket(conversation.id, selectedTags, subject);
-      toast.success('Conversación convertida a ticket!');
-      onSuccess(newTicket);
-      onClose();
-    } catch (error) {
-      toast.error('Error al convertir a ticket');
-      console.error(error);
-    } finally {
-      setIsConverting(false);
-    }
-  };
-
-  if (!isOpen || !conversation) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Convertir a Ticket</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
-        
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Asigna tags a la conversación con <span className="font-bold">{conversation.contact.name}</span> para crear un nuevo ticket.
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Convertir a Ticket</h2>
+        <p className="text-gray-600 mb-4">
+          Conversación con: <strong>{contactName}</strong>
         </p>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Título del Ticket
-          </label>
-          <input
-            type="text"
-            value={subject}
-            onChange={e => setSubject(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Ej: Consulta de pago"
-            disabled={isConverting}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tags Disponibles
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {tags.map(tag => (
-              <button
-                key={tag.id}
-                onClick={() => handleToggleTag(tag.id)}
-                className={`px-3 py-1 text-sm rounded-full border ${selectedTags.includes(tag.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'}`}
-              >
-                {`${tag.attribute}: ${tag.value}`}
-              </button>
-            ))}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Asunto del Ticket
+            </label>
+            <input
+              type="text"
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              required
+            />
           </div>
-        </div>
-
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleConvert}
-            disabled={isConverting}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
-          >
-            {isConverting ? 'Convirtiendo...' : <><Tag className="w-4 h-4 mr-2" /> Convertir a Ticket</>}
-          </button>
-        </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
+            </label>
+            <textarea
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              rows={3}
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Prioridad
+            </label>
+            <select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value as TicketPriority })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="low">Baja</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estado
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as TicketStatus })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="open">Abierto</option>
+              <option value="pending">Pendiente</option>
+              <option value="waiting">En Espera</option>
+              <option value="closed">Cerrado</option>
+            </select>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Convertir
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

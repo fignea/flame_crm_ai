@@ -1,201 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
-import { botFlowService, BotFlow, CreateBotFlowData } from '../services/botFlowService';
-import { Connection } from '../services/connectionService';
+import { BotFlow } from '../types/api';
 
 interface BotFlowModalProps {
-  flow?: BotFlow | null;
-  connections: Connection[];
+  isOpen: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (botFlow: Partial<BotFlow>) => void;
+  botFlow?: BotFlow | null;
+  flow?: BotFlow | null;
 }
 
-const BotFlowModal: React.FC<BotFlowModalProps> = ({ flow, connections, onClose, onSave }) => {
-  const [formData, setFormData] = useState<CreateBotFlowData>({
+const BotFlowModal: React.FC<BotFlowModalProps> = ({ isOpen, onClose, onSave, botFlow }) => {
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
-    connectionId: '',
     isActive: true
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (flow) {
+    if (botFlow) {
       setFormData({
-        name: flow.name,
-        description: flow.description,
-        connectionId: flow.connectionId,
-        isActive: flow.isActive
+        name: botFlow.name || '',
+        description: botFlow.description || '',
+        isActive: botFlow.isActive ?? true
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        isActive: true
       });
     }
-  }, [flow]);
+  }, [botFlow]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida';
-    }
-
-    if (!formData.connectionId) {
-      newErrors.connectionId = 'Debe seleccionar una conexión';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (flow) {
-        await botFlowService.updateFlow(flow.id, formData);
-      } else {
-        await botFlowService.createFlow(formData);
-      }
-      onSave();
-    } catch (error) {
-      console.error('Error guardando flujo:', error);
-      setErrors({ submit: 'Error al guardar el flujo' });
-    } finally {
-      setLoading(false);
-    }
+    onSave(formData);
+    onClose();
   };
 
-  const handleInputChange = (field: keyof CreateBotFlowData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {flow ? 'Editar Flujo de Bot' : 'Nuevo Flujo de Bot'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">
+          {botFlow ? 'Editar Flujo de Bot' : 'Nuevo Flujo de Bot'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre del Flujo *
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre
             </label>
             <input
               type="text"
-              id="name"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Ej: Atención al Cliente"
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              required
             />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-            )}
           </div>
-
+          
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Descripción *
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
             </label>
             <textarea
-              id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
               rows={3}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.description ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Describe el propósito de este flujo de bot"
             />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-            )}
           </div>
-
-          <div>
-            <label htmlFor="connectionId" className="block text-sm font-medium text-gray-700 mb-2">
-              Conexión de WhatsApp *
-            </label>
-            <select
-              id="connectionId"
-              value={formData.connectionId}
-              onChange={(e) => handleInputChange('connectionId', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.connectionId ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              <option value="">Seleccionar conexión</option>
-              {connections.map((connection) => (
-                <option key={connection.id} value={connection.id}>
-                  {connection.name} ({connection.type})
-                </option>
-              ))}
-            </select>
-            {errors.connectionId && (
-              <p className="mt-1 text-sm text-red-600">{errors.connectionId}</p>
-            )}
-          </div>
-
+          
           <div className="flex items-center">
             <input
               type="checkbox"
               id="isActive"
               checked={formData.isActive}
-              onChange={(e) => handleInputChange('isActive', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+              className="mr-2"
             />
-            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
-              Activar flujo automáticamente
+            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+              Activo
             </label>
           </div>
-
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          
+          <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Save size={16} />
-              )}
-              {flow ? 'Actualizar' : 'Crear'} Flujo
+              {botFlow ? 'Actualizar' : 'Crear'}
             </button>
           </div>
         </form>

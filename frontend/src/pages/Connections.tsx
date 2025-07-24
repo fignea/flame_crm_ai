@@ -36,7 +36,7 @@ const Connections: React.FC = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState<string | null>(null);
-  const [statusInterval, setStatusInterval] = useState<number | null>(null);
+  const [statusInterval, setStatusInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Cargar conexiones al montar el componente
   useEffect(() => {
@@ -221,13 +221,13 @@ const Connections: React.FC = () => {
         const interval = setInterval(checkStatus, 3000);
         setStatusInterval(interval);
         
-        // Limpiar después de 2 minutos (tiempo máximo de espera)
+        // Limpiar después de2tos (tiempo máximo de espera)
         setTimeout(() => {
           if (interval) {
             clearInterval(interval);
             setStatusInterval(null);
           }
-        }, 120000);
+        }, 120000) as any;
         
       } catch (error: any) {
         setQrError('No se pudo obtener el código QR.');

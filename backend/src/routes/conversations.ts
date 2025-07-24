@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../prisma/client';
 import { authMiddleware } from '../middleware/auth';
 import { getIO } from '../services/socketService';
-import { sendMessage as sendWhatsAppMessage } from '../services/whatsappService';
+import { sendMessage as sendWhatsAppMessage, sendWhatsAppLocation } from '../services/whatsappService';
 
 const router = Router();
 
@@ -47,10 +47,27 @@ router.patch('/:conversationId/read', async (req: any, res) => {
 });
 
 
-// Obtener todas las conversaciones
+// Obtener todas las conversaciones con filtros avanzados
 router.get('/', async (req: any, res) => {
   try {
-    const { page = 1, limit = 20, search = '', connectionId = 'all', status = 'all' } = req.query;
+    const { 
+      page = 1, 
+      limit = 20, 
+      search = '', 
+      connectionId = 'all', 
+      status = 'all',
+      assignedTo = 'all',
+      dateFrom,
+      dateTo,
+      tags,
+      hasTicket,
+      messageCount,
+      responseTime,
+      messageType,
+      sortBy = 'updatedAt',
+      sortOrder = 'desc'
+    } = req.query;
+    
     const skip = (Number(page) - 1) * Number(limit);
     const companyId = req.user.companyId;
 
@@ -59,23 +76,134 @@ router.get('/', async (req: any, res) => {
         companyId: companyId
       }
     };
+
+    // Filtro de búsqueda general mejorado
     if (search) {
       where.OR = [
         { contact: { name: { contains: String(search), mode: 'insensitive' } } },
         { contact: { number: { contains: String(search) } } },
+        { contact: { email: { contains: String(search), mode: 'insensitive' } } },
+        { contact: { companyName: { contains: String(search), mode: 'insensitive' } } },
+        { messages: { some: { content: { contains: String(search), mode: 'insensitive' } } } }
       ];
     }
+
+    // Filtro por conexión
     if (connectionId !== 'all') where.connectionId = connectionId;
+    
+    // Filtro por estado de lectura
     if (status === 'unread') where.unreadCount = { gt: 0 };
     if (status === 'read') where.unreadCount = 0;
+    
+    // Filtro por agente asignado
+    if (assignedTo !== 'all') {
+      if (assignedTo === 'unassigned') {
+        where.userId = null;
+      } else {
+        where.userId = assignedTo;
+      }
+    }
+
+    // Filtro por rango de fechas
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+      if (dateTo) where.createdAt.lte = new Date(dateTo);
+    }
+
+    // Filtro por etiquetas
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : [tags];
+      where.contact = {
+        ...where.contact,
+        tags: {
+          some: {
+            OR: tagArray.map(tag => ({
+              OR: [
+                { attribute: { contains: tag, mode: 'insensitive' } },
+                { value: { contains: tag, mode: 'insensitive' } }
+              ]
+            }))
+          }
+        }
+      };
+    }
+
+    // Filtro por existencia de ticket
+    if (hasTicket !== undefined) {
+      if (!where.contact) {
+        where.contact = {};
+      }
+      if (hasTicket === 'true') {
+        where.contact.tickets = { some: {} };
+      } else if (hasTicket === 'false') {
+        where.contact.tickets = { none: {} };
+      }
+    }
+
+    // Filtro por número de mensajes
+    if (messageCount) {
+      const countFilter: any = {};
+      if (messageCount === 'none') {
+        countFilter.messages = { none: {} };
+      } else if (messageCount === 'few') {
+        countFilter.messages = { some: {} };
+      } else if (messageCount === 'many') {
+        // Conversaciones con más de 10 mensajes
+        countFilter.messages = { some: { take: 11 } };
+      }
+      where.contact = { ...where.contact, ...countFilter };
+    }
+
+    // Filtro por tipo de mensaje
+    if (messageType) {
+      where.messages = {
+        some: {
+          OR: [
+            { mediaType: messageType },
+            ...(messageType === 'text' ? [{ mediaType: null }] : [])
+          ]
+        }
+      };
+    }
+
+    // Configurar ordenamiento
+    const orderBy: any = {};
+    if (sortBy === 'updatedAt') {
+      orderBy.updatedAt = sortOrder;
+    } else if (sortBy === 'createdAt') {
+      orderBy.createdAt = sortOrder;
+    } else if (sortBy === 'contactName') {
+      orderBy.contact = { name: sortOrder };
+    } else if (sortBy === 'unreadCount') {
+      orderBy.unreadCount = sortOrder;
+    } else {
+      orderBy.updatedAt = 'desc';
+    }
 
     const conversations = await prisma.conversation.findMany({
       where,
       include: {
-        contact: { select: { id: true, name: true, number: true, avatar: true } },
+        contact: { 
+          select: { 
+            id: true, 
+            name: true, 
+            number: true, 
+            avatar: true,
+            email: true,
+            companyName: true,
+            tags: true
+          } 
+        },
         connection: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, email: true } },
+        _count: {
+          select: {
+            messages: true
+          }
+        }
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy,
       skip,
       take: Number(limit),
     });
@@ -111,11 +239,47 @@ router.get('/', async (req: any, res) => {
 
     const lastMessageMap = new Map(lastMessages.map((m: any) => [m.conversationId, m]));
 
-    const conversationsWithTicket = conversations.map((c: any) => {
+    // Aplicar filtros adicionales post-query
+    let filteredConversations = conversations;
+
+    // Filtro por tiempo de respuesta (si se implementa)
+    if (responseTime) {
+      filteredConversations = filteredConversations.filter((c: any) => {
+        const lastMessage = lastMessageMap.get(c.id);
+        if (!lastMessage || lastMessage.fromMe) return true;
+        
+        const now = new Date();
+        const messageTime = new Date(lastMessage.timestamp);
+        const diffHours = (now.getTime() - messageTime.getTime()) / (1000 * 60 * 60);
+        
+        switch (responseTime) {
+          case 'immediate': return diffHours <= 1;
+          case 'recent': return diffHours <= 24;
+          case 'overdue': return diffHours > 24;
+          default: return true;
+        }
+      });
+    }
+
+    // Filtro por número de mensajes (refinamiento)
+    if (messageCount) {
+      filteredConversations = filteredConversations.filter((c: any) => {
+        const count = c._count.messages;
+        switch (messageCount) {
+          case 'none': return count === 0;
+          case 'few': return count >= 1 && count <= 10;
+          case 'many': return count > 10;
+          default: return true;
+        }
+      });
+    }
+
+    const conversationsWithTicket = filteredConversations.map((c: any) => {
       const ticket = ticketMap.get(`${c.contactId}-${c.connectionId}`);
       return {
         ...c,
         lastMessage: lastMessageMap.get(c.id) || null,
+        messageCount: c._count.messages,
         ticket: ticket
           ? {
               id: ticket.id,
@@ -129,6 +293,37 @@ router.get('/', async (req: any, res) => {
 
     const total = await prisma.conversation.count({ where });
 
+    // Obtener estadísticas adicionales para los filtros
+    const stats = {
+      unreadCount: await prisma.conversation.count({ 
+        where: { 
+          ...where, 
+          unreadCount: { gt: 0 } 
+        } 
+      }),
+      assignedCount: await prisma.conversation.count({ 
+        where: { 
+          ...where, 
+          userId: { not: null } 
+        } 
+      }),
+      unassignedCount: await prisma.conversation.count({ 
+        where: { 
+          ...where, 
+          userId: null 
+        } 
+      }),
+      withTicketCount: await prisma.conversation.count({
+        where: {
+          ...where,
+          contact: {
+            ...where.contact,
+            tickets: { some: {} }
+          }
+        }
+      })
+    };
+
     return res.json({
       conversations: conversationsWithTicket,
       pagination: {
@@ -137,9 +332,137 @@ router.get('/', async (req: any, res) => {
         total,
         pages: Math.ceil(Number(total) / Number(limit)),
       },
+      stats,
+      filters: {
+        applied: {
+          search: search || null,
+          connectionId: connectionId !== 'all' ? connectionId : null,
+          status: status !== 'all' ? status : null,
+          assignedTo: assignedTo !== 'all' ? assignedTo : null,
+          dateFrom: dateFrom || null,
+          dateTo: dateTo || null,
+          tags: tags || null,
+          hasTicket: hasTicket || null,
+          messageCount: messageCount || null,
+          responseTime: responseTime || null,
+          messageType: messageType || null
+        },
+        sort: {
+          by: sortBy,
+          order: sortOrder
+        }
+      }
     });
   } catch (error) {
     console.error('Error fetching conversations:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Obtener opciones disponibles para filtros
+router.get('/filter-options', async (req: any, res) => {
+  try {
+    const companyId = req.user.companyId;
+
+    // Obtener agentes disponibles
+    const agents = await prisma.user.findMany({
+      where: { 
+        companyId,
+        isActive: true,
+        role: { name: { in: ['agent', 'admin', 'manager'] } }
+      },
+      select: { id: true, name: true, email: true }
+    });
+
+    // Obtener conexiones disponibles
+    const connections = await prisma.connection.findMany({
+      where: { companyId },
+      select: { id: true, name: true, type: true }
+    });
+
+    // Obtener etiquetas más comunes
+    const commonTags = await prisma.tag.groupBy({
+      by: ['attribute', 'value'],
+      where: { 
+        contacts: { some: { companyId } },
+        createdAt: { 
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Último mes
+        }
+      },
+      _count: { attribute: true },
+      orderBy: { _count: { attribute: 'desc' } },
+      take: 20
+    });
+
+    // Obtener tipos de mensaje más comunes
+    const messageTypes = await prisma.message.groupBy({
+      by: ['mediaType'],
+      where: { 
+        connection: { companyId },
+        mediaType: { not: null }
+      },
+      _count: { mediaType: true },
+      orderBy: { _count: { mediaType: 'desc' } }
+    });
+
+    return res.json({
+      agents,
+      connections,
+      commonTags: commonTags.map((tag: any) => ({
+        label: `${tag.attribute}: ${tag.value}`,
+        value: tag.value,
+        attribute: tag.attribute,
+        count: tag._count?.attribute || 0
+      })),
+      messageTypes: messageTypes.map((type: any) => ({
+        label: type.mediaType,
+        value: type.mediaType,
+        count: type._count?.mediaType || 0
+      })),
+      dateRanges: [
+        { label: 'Hoy', value: 'today' },
+        { label: 'Ayer', value: 'yesterday' },
+        { label: 'Esta semana', value: 'thisWeek' },
+        { label: 'Semana pasada', value: 'lastWeek' },
+        { label: 'Este mes', value: 'thisMonth' },
+        { label: 'Mes pasado', value: 'lastMonth' },
+        { label: 'Últimos 3 meses', value: 'last3Months' },
+        { label: 'Personalizado', value: 'custom' }
+      ],
+      statusOptions: [
+        { label: 'Todos', value: 'all' },
+        { label: 'No leídos', value: 'unread' },
+        { label: 'Leídos', value: 'read' }
+      ],
+      assignmentOptions: [
+        { label: 'Todos', value: 'all' },
+        { label: 'Sin asignar', value: 'unassigned' },
+        ...agents.map(agent => ({
+          label: agent.name,
+          value: agent.id
+        }))
+      ],
+      messageCountOptions: [
+        { label: 'Cualquier cantidad', value: 'all' },
+        { label: 'Sin mensajes', value: 'none' },
+        { label: 'Pocos (1-10)', value: 'few' },
+        { label: 'Muchos (10+)', value: 'many' }
+      ],
+      responseTimeOptions: [
+        { label: 'Cualquier tiempo', value: 'all' },
+        { label: 'Inmediato (< 1h)', value: 'immediate' },
+        { label: 'Reciente (< 24h)', value: 'recent' },
+        { label: 'Atrasado (> 24h)', value: 'overdue' }
+      ],
+      sortOptions: [
+        { label: 'Última actualización', value: 'updatedAt' },
+        { label: 'Fecha de creación', value: 'createdAt' },
+        { label: 'Nombre del contacto', value: 'contactName' },
+        { label: 'Mensajes no leídos', value: 'unreadCount' }
+      ]
+    });
+  } catch (error) {
+    console.error('Error getting filter options:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -238,7 +561,18 @@ router.get('/:conversationId/messages', async (req, res) => {
 router.post('/:conversationId/messages', async (req: any, res) => {
   try {
     const { conversationId } = req.params;
-    const { content, mediaUrl, mediaType } = req.body;
+    const { 
+      content, 
+      mediaUrl, 
+      mediaType,
+      locationLatitude,
+      locationLongitude,
+      locationAddress,
+      fileName,
+      fileSize,
+      fileMimeType,
+      metadata
+    } = req.body;
     const io = getIO();
 
     const conversation = await prisma.conversation.findUnique({
@@ -250,14 +584,28 @@ router.post('/:conversationId/messages', async (req: any, res) => {
     }
 
     let sentMessage;
-    try {
-      sentMessage = await sendWhatsAppMessage(conversation.connectionId, conversation.contact.number, content);
-      console.log('🔍 [DEBUG] sentMessage completo:', JSON.stringify(sentMessage, null, 2));
-      console.log('🔍 [DEBUG] sentMessage.key:', sentMessage?.key);
-      console.log('🔍 [DEBUG] sentMessage.key.id:', sentMessage?.key?.id);
-    } catch (error: any) {
-      console.error('WhatsApp Service Error:', error.message);
-      return res.status(400).json({ error: error.message });
+    
+    // Solo enviar a WhatsApp si no es un mensaje de archivo local
+    if (mediaType !== 'document' && mediaType !== 'image' && mediaType !== 'video' && mediaType !== 'audio') {
+      try {
+        if (mediaType === 'location') {
+          // Enviar ubicación a WhatsApp
+          sentMessage = await sendWhatsAppLocation(
+            conversation.connectionId, 
+            conversation.contact.number, 
+            locationLatitude, 
+            locationLongitude,
+            locationAddress
+          );
+        } else {
+          // Enviar mensaje normal
+          sentMessage = await sendWhatsAppMessage(conversation.connectionId, conversation.contact.number, content);
+        }
+        console.log('🔍 [DEBUG] sentMessage completo:', JSON.stringify(sentMessage, null, 2));
+      } catch (error: any) {
+        console.error('WhatsApp Service Error:', error.message);
+        return res.status(400).json({ error: error.message });
+      }
     }
 
     const messageData: any = {
@@ -269,6 +617,14 @@ router.post('/:conversationId/messages', async (req: any, res) => {
       connectionId: conversation.connectionId,
       mediaUrl,
       mediaType,
+      locationLatitude,
+      locationLongitude,
+      locationAddress,
+      fileName,
+      fileSize,
+      fileMimeType,
+      metadata,
+      sentAt: new Date(),
     };
 
     // Solo agregar el ID si existe
@@ -295,6 +651,31 @@ router.post('/:conversationId/messages', async (req: any, res) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+
+// Subir archivo
+router.post('/:conversationId/upload', async (req: any, res) => {
+  try {
+    const { conversationId } = req.params;
+    
+    // Aquí implementarías la lógica de subida de archivos
+    // Por ejemplo, usando multer o similar
+    
+    // Por ahora, retornamos un URL de prueba
+    const fileUrl = `/uploads/${conversationId}/${Date.now()}_${req.file?.originalname || 'file'}`;
+    
+    return res.json({
+      mediaUrl: fileUrl,
+      fileName: req.file?.originalname,
+      fileSize: req.file?.size,
+      fileMimeType: req.file?.mimetype
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Marcar mensaje como leído
 
 // Convertir una conversación en un ticket
 router.post('/:conversationId/to-ticket', async (req: any, res) => {

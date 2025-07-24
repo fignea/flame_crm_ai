@@ -1,223 +1,109 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
-import { botFlowService, BotCondition } from '../services/botFlowService';
+import { BotFlowCondition } from '../types/api';
 
 interface ConditionModalProps {
-  condition?: BotCondition | null;
-  parentConditionId?: string | null;
-  botFlowId: string;
+  isOpen: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (condition: Partial<BotFlowCondition>) => void;
+  condition?: BotFlowCondition | null;
 }
 
-const ConditionModal: React.FC<ConditionModalProps> = ({ condition, parentConditionId, botFlowId, onClose, onSave }) => {
+const ConditionModal: React.FC<ConditionModalProps> = ({ isOpen, onClose, onSave, condition }) => {
   const [formData, setFormData] = useState({
-    field: '',
-    operator: 'equals',
-    value: '',
-    order: 0
+    name: '',
+    description: '',
+    conditionType: 'text_match' as 'text_match' | 'keyword' | 'intent' | 'time',
+    parameters: {}
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (condition) {
       setFormData({
-        field: condition.field,
-        operator: condition.operator,
-        value: condition.value,
-        order: condition.order
+        name: condition.name || '',
+        description: condition.description || '',
+        conditionType: condition.conditionType || 'text_match',
+        parameters: condition.parameters || {}
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        conditionType: 'text_match',
+        parameters: {}
       });
     }
   }, [condition]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.field.trim()) {
-      newErrors.field = 'El campo es requerido';
-    }
-
-    if (!formData.value.trim()) {
-      newErrors.value = 'El valor es requerido';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (condition) {
-        await botFlowService.updateCondition(condition.id, formData);
-      } else {
-        await botFlowService.createCondition(botFlowId, {
-          ...formData,
-          parentConditionId: parentConditionId || undefined
-        });
-      }
-      onSave();
-    } catch (error) {
-      console.error('Error guardando condición:', error);
-      setErrors({ submit: 'Error al guardar la condición' });
-    } finally {
-      setLoading(false);
-    }
+    onSave(formData);
+    onClose();
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const fieldOptions = [
-    { value: 'message', label: 'Mensaje del usuario' },
-    { value: 'contact.name', label: 'Nombre del contacto' },
-    { value: 'contact.number', label: 'Número del contacto' },
-    { value: 'contact.email', label: 'Email del contacto' },
-    { value: 'ticket.status', label: 'Estado del ticket' },
-    { value: 'ticket.queue', label: 'Cola del ticket' },
-    { value: 'user.profile', label: 'Perfil del usuario' }
-  ];
-
-  const operatorOptions = [
-    { value: 'equals', label: 'Igual a' },
-    { value: 'contains', label: 'Contiene' },
-    { value: 'starts_with', label: 'Empieza con' },
-    { value: 'ends_with', label: 'Termina con' },
-    { value: 'not_equals', label: 'No igual a' },
-    { value: 'not_contains', label: 'No contiene' },
-    { value: 'regex', label: 'Expresión regular' }
-  ];
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {condition ? 'Editar Condición' : 'Nueva Condición'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">
+          {condition ? 'Editar Condición' : 'Nueva Condición'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="field" className="block text-sm font-medium text-gray-700 mb-2">
-              Campo a evaluar *
-            </label>
-            <select
-              id="field"
-              value={formData.field}
-              onChange={(e) => handleInputChange('field', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.field ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              <option value="">Seleccionar campo</option>
-              {fieldOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.field && (
-              <p className="mt-1 text-sm text-red-600">{errors.field}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="operator" className="block text-sm font-medium text-gray-700 mb-2">
-              Operador
-            </label>
-            <select
-              id="operator"
-              value={formData.operator}
-              onChange={(e) => handleInputChange('operator', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {operatorOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-2">
-              Valor a comparar *
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre
             </label>
             <input
               type="text"
-              id="value"
-              value={formData.value}
-              onChange={(e) => handleInputChange('value', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.value ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Ej: hola, ayuda, soporte"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              required
             />
-            {errors.value && (
-              <p className="mt-1 text-sm text-red-600">{errors.value}</p>
-            )}
           </div>
-
+          
           <div>
-            <label htmlFor="order" className="block text-sm font-medium text-gray-700 mb-2">
-              Orden de evaluación
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción
             </label>
-            <input
-              type="number"
-              id="order"
-              value={formData.order}
-              onChange={(e) => handleInputChange('order', parseInt(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0"
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              rows={3}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Las condiciones se evalúan en orden ascendente (0, 1, 2...)
-            </p>
           </div>
-
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de Condición
+            </label>
+            <select
+              value={formData.conditionType}
+              onChange={(e) => setFormData({ ...formData, conditionType: e.target.value as 'text_match' | 'keyword' | 'intent' | 'time' })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="text_match">Coincidencia de texto</option>
+              <option value="keyword">Palabra clave</option>
+              <option value="intent">Intención</option>
+              <option value="time">Tiempo</option>
+            </select>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Save size={16} />
-              )}
-              {condition ? 'Actualizar' : 'Crear'} Condición
+              {condition ? 'Actualizar' : 'Crear'}
             </button>
           </div>
         </form>

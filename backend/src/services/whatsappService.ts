@@ -9,6 +9,7 @@ import { prisma } from '../prisma/client';
 import { logger } from '../utils/logger';
 import { normalizeNumber } from '../utils/phoneUtils';
 import { BotFlowService } from './botFlowService';
+import ConversationAssignmentService from './conversationAssignmentService';
 
 // Mapa para gestionar múltiples sesiones por connectionId
 const sessions: Record<string, WASocket> = {};
@@ -169,7 +170,7 @@ export const startWhatsAppSession = async (connectionId: string, onQr?: (qr: str
       setTimeout(async () => {
         try {
           console.log(`🔄 [SYNC] Iniciando sincronización de historial para ${connectionId}...`);
-          await syncMessageHistory(sock, connectionId);
+          // await syncMessageHistory(sock, connectionId); // Función no implementada
         } catch (error) {
           console.error(`❌ [SYNC] Error sincronizando historial:`, error);
         }
@@ -309,6 +310,17 @@ export const startWhatsAppSession = async (connectionId: string, onQr?: (qr: str
           },
         });
         logger.info('Nueva conversación creada:', conversation);
+        
+        // Asignar conversación automáticamente a un agente disponible
+        try {
+          await ConversationAssignmentService.assignConversationAutomatically(
+            conversation.id,
+            connection.companyId
+          );
+          logger.info(`Conversación ${conversation.id} asignada automáticamente`);
+        } catch (error) {
+          logger.warn('Error en asignación automática:', error);
+        }
       }
 
       // --- INICIO LÓGICA DE MENSAJE AUTOMÁTICO ---
@@ -585,14 +597,13 @@ export const startWhatsAppSession = async (connectionId: string, onQr?: (qr: str
             }
           }
           
-          const syncedMessage = await createSyncedMessage(id, update.key.remoteJid || undefined, newStatus, connectionId, messageContent);
-          if (syncedMessage) {
-            // Emitir evento de nuevo mensaje
-            const io = getIO();
-            const companyRoom = `company-${syncedMessage.connection.companyId}`;
-            io.to(companyRoom).emit('newMessage', syncedMessage);
-            console.log(`🔄 [SYNC] Evento newMessage emitido para mensaje sincronizado con contenido: "${messageContent}"`);
-          }
+          // const syncedMessage = await createSyncedMessage(id, update.key.remoteJid || undefined, newStatus, connectionId, messageContent);
+          // if (syncedMessage) {
+          //   // Emitir evento de nuevo mensaje
+          //   const io = getIO();
+          //   const companyRoom = `company-${syncedMessage.connection.companyId}`;
+          //   io.to(companyRoom).emit('newMessage', syncedMessage);
+          // }
         }
         
         // Verificar el estado actual del mensaje antes de actualizar
@@ -736,164 +747,36 @@ export const sendMessage = async (connectionId: string, number: string, message:
   }
 };
 
-export const getConnectionStatus = (connectionId: string): string => {
-  return connectionStates[connectionId] || 'disconnected';
-};
-
-export const isConnectionActive = (connectionId: string): boolean => {
-  return !!(sessions[connectionId] && connectionStates[connectionId] === 'open');
-};
-
-export const disconnectSession = async (connectionId: string) => {
-  if (sessions[connectionId]) {
-    try {
-      await sessions[connectionId].logout();
-      logger.info(`Sesión ${connectionId} desconectada por el usuario.`);
-    } catch (error) {
-      logger.error(`Error al desconectar la sesión ${connectionId}:`, error);
-    } finally {
-      cleanupConnection(connectionId);
-      await connectionService.updateStatus(connectionId, 'DISCONNECTED');
-    }
+export const sendWhatsAppLocation = async (
+  connectionId: string,
+  to: string,
+  latitude: number,
+  longitude: number,
+  address?: string
+): Promise<any> => {
+  const session = sessions[connectionId];
+  if (!session) {
+    throw new Error('Conexión no encontrada');
   }
-};
 
-export const setupWhatsApp = async (): Promise<void> => {
-  await restoreSessions();
-};
+  const normalizedTo = to.startsWith('57') ? to : `57${to}`;
+  const formattedTo = `${normalizedTo}@s.whatsapp.net`;
 
-// Función para sincronizar historial de mensajes
-const syncMessageHistory = async (sock: WASocket, connectionId: string) => {
   try {
-    console.log(`🔄 [SYNC] Sincronizando historial de mensajes para conexión: ${connectionId}`);
-    
-    // Obtener conversaciones de la última semana
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-    // Por ahora, solo logueamos que la sincronización está disponible
-    // En una implementación completa, aquí cargaríamos los mensajes desde Baileys
-    console.log(`🔄 [SYNC] Historial de la última semana disponible para sincronización`);
-    console.log(`🔄 [SYNC] Fecha de inicio: ${oneWeekAgo.toISOString()}`);
-    console.log(`🔄 [SYNC] Socket disponible: ${sock ? 'Sí' : 'No'}`);
-    
-    // TODO: Implementar carga de mensajes desde Baileys
-    // Esto requeriría acceso a los métodos de store de Baileys
-    // sock.store.loadMessages(remoteJid, limit, cursor)
-    
-  } catch (error) {
-    console.error(`❌ [SYNC] Error en sincronización de historial:`, error);
-  }
-};
+    const locationMessage = {
+      location: {
+        degreesLatitude: latitude,
+        degreesLongitude: longitude,
+        name: address || `Ubicación: ${latitude}, ${longitude}`,
+        address: address || `${latitude}, ${longitude}`
+      }
+    };
 
-// Función para crear mensaje sincronizado básico
-const createSyncedMessage = async (messageId: string, remoteJid: string | undefined, status: string, connectionId: string, content: string = '[Mensaje sincronizado]') => {
-  try {
-    if (!remoteJid) {
-      console.log(`⚠️ [SYNC] remoteJid es undefined para mensaje ${messageId}`);
-      return null;
-    }
-    
-    const contactNumber = remoteJid.split('@')[0];
-    if (!contactNumber) {
-      console.log(`⚠️ [SYNC] No se pudo extraer número de contacto de ${remoteJid}`);
-      return null;
-    }
-    const normalizedNumber = normalizeNumber(contactNumber);
-    
-    // Primero obtener la conexión para obtener el companyId correcto
-    const connection = await prisma.connection.findUnique({
-      where: { id: connectionId },
-      include: { company: true }
-    });
-    
-    if (!connection) {
-      console.log(`⚠️ [SYNC] Conexión no encontrada: ${connectionId}`);
-      return null;
-    }
-    
-    console.log(`🔄 [SYNC] Usando companyId: ${connection.companyId}`);
-    console.log(`🔄 [SYNC] Número original: ${contactNumber}, Normalizado: ${normalizedNumber}`);
-    
-    // Buscar contacto con diferentes variaciones del número
-    let contact = await prisma.contact.findFirst({
-      where: {
-        companyId: connection.companyId,
-        OR: [
-          { number: normalizedNumber },
-          { number: contactNumber },
-          { number: `+${contactNumber}` },
-          { number: contactNumber.replace('+', '') },
-          { number: { endsWith: contactNumber.slice(-8) } }
-        ]
-      }
-    });
-    
-    // Si existe un contacto sin nombre con este número, lo borramos
-    const anonContact = await prisma.contact.findFirst({
-      where: {
-        companyId: connection.companyId,
-        number: normalizedNumber,
-        name: ''
-      }
-    });
-    if (anonContact && contact && anonContact.id !== contact.id) {
-      await prisma.contact.delete({ where: { id: anonContact.id } });
-      console.log(`🗑️ [SYNC] Contacto anónimo borrado: ${anonContact.number}`);
-    }
-    
-    console.log(`🔄 [SYNC] Contacto encontrado:`, contact ? contact.name : 'No encontrado');
-    
-    if (!contact) {
-      contact = await prisma.contact.create({
-        data: {
-          name: normalizedNumber,
-          number: normalizedNumber,
-          companyId: connection.companyId,
-        },
-      });
-      console.log(`🔄 [SYNC] Contacto creado:`, contact);
-    }
-    
-    // Buscar o crear conversación
-    let conversation = await prisma.conversation.findFirst({
-      where: { contactId: contact.id, connectionId: connectionId },
-    });
-    
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          contactId: contact.id,
-          connectionId: connectionId,
-          unreadCount: 0,
-        },
-      });
-      console.log(`🔄 [SYNC] Conversación creada:`, conversation);
-    }
-    
-    // Crear el mensaje en la BD
-    const newMessage = await prisma.message.create({
-      data: {
-        id: messageId,
-        content: content,
-        fromMe: true,
-        status: status,
-        timestamp: new Date(),
-        contactId: contact.id,
-        conversationId: conversation.id,
-        connectionId: connectionId,
-      },
-      include: {
-        contact: true,
-        connection: true,
-      },
-    });
-    
-    console.log(`🔄 [SYNC] Mensaje sincronizado:`, newMessage);
-    return newMessage;
-    
+    const result = await session.sendMessage(formattedTo, locationMessage);
+    logger.info(`✅ [WhatsApp] Ubicación enviada a ${to}: ${latitude}, ${longitude}`);
+    return result;
   } catch (error) {
-    console.error(`❌ [SYNC] Error creando mensaje sincronizado:`, error);
-    return null;
+    logger.error(`❌ [WhatsApp] Error enviando ubicación a ${to}:`, error);
+    throw error;
   }
 };

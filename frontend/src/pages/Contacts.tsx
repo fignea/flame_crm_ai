@@ -20,7 +20,7 @@ import {
 import NewConversationModal from '../components/NewConversationModal';
 import ImportContactsModal from '../components/ImportContactsModal';
 import ExportContactsModal from '../components/ExportContactsModal';
-import { useSidebar } from '../contexts/SidebarContext';
+
 
 const Contacts: React.FC = () => {
   const { } = useAuth();
@@ -77,7 +77,7 @@ const Contacts: React.FC = () => {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [viewContact, setViewContact] = useState<Contact | null>(null);
 
-  const { isSidebarCollapsed } = useSidebar();
+
 
   // Cargar contactos
   useEffect(() => {
@@ -175,28 +175,35 @@ const Contacts: React.FC = () => {
   // Función para guardar cambios de edición
   const handleSaveEdit = async () => {
     if (!editingContact) return;
+    
     try {
       await contactService.update(editingContact.id, editingContact);
-      toast.success('Contacto actualizado exitosamente');
+      setContacts(prev => prev.map(c => c.id === editingContact.id ? editingContact : c));
       setShowEditModal(false);
       setEditingContact(null);
-      loadContacts();
-    } catch (error: any) {
-      toast.error(error.message || 'Error al actualizar el contacto');
+      toast.success('Contacto actualizado');
+    } catch (error) {
+      toast.error('Error al actualizar contacto');
     }
   };
 
-  // Función para manejar importación exitosa
-  const handleImportSuccess = (result: any) => {
-    toast.success(`Importación completada: ${result.imported} contactos importados`);
-    if (result.duplicates > 0) {
-      toast.success(`${result.duplicates} contactos duplicados omitidos`);
-    }
-    if (result.errors > 0) {
-      toast.error(`${result.errors} errores durante la importación`);
-    }
-    loadContacts();
+  const handleCreateConversation = async (data: { contactId: string; initialMessage: string }) => {
+    // TODO: Implementar creación de conversación
+    console.log('Crear conversación:', data);
   };
+
+  const handleImportContacts = async (file: File, options: any) => {
+    // TODO: Implementar importación de contactos
+    console.log('Importar contactos:', file, options);
+  };
+
+  const handleExportContacts = async (format: string, filters: any) => {
+    // TODO: Implementar exportación de contactos
+    console.log('Exportar contactos:', format, filters);
+  };
+
+  // Usar contacts como filteredContacts por ahora
+  const filteredContacts = contacts;
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -207,200 +214,6 @@ const Contacts: React.FC = () => {
           onClick={() => setShowFilters(false)}
         />
       )}
-
-      {/* Sidebar de filtros */}
-      <div
-        className={`
-          bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
-          transition-all duration-300
-          fixed inset-0 z-40 w-80
-          lg:static lg:inset-auto lg:z-auto
-          ${showFilters ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${!isSidebarCollapsed ? 'ml-64' : 'ml-16'} lg:ml-0
-        `}
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filtros</h2>
-            <button
-              onClick={() => setShowFilters(false)}
-              className="lg:hidden p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {/* Búsqueda general */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Búsqueda general
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre, teléfono, email..."
-                value={filters.search}
-                onChange={(e) => setFilters({...filters, search: e.target.value})}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-          </div>
-
-          {/* Filtros por campo */}
-          <div className="space-y-4">
-            {/* Estado */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Estado
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({...filters, status: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">Todos</option>
-                <option value="active">Activo</option>
-                <option value="blocked">Bloqueado</option>
-              </select>
-            </div>
-
-            {/* Ciudad */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Ciudad
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por ciudad"
-                value={filters.city}
-                onChange={(e) => setFilters({...filters, city: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Provincia */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Provincia
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por provincia"
-                value={filters.state}
-                onChange={(e) => setFilters({...filters, state: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* País */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                País
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por país"
-                value={filters.country}
-                onChange={(e) => setFilters({...filters, country: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Empresa */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Empresa
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por empresa"
-                value={filters.companyName}
-                onChange={(e) => setFilters({...filters, companyName: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Cargo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Cargo
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por cargo"
-                value={filters.position}
-                onChange={(e) => setFilters({...filters, position: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Tipo de cliente */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tipo de cliente
-              </label>
-              <input
-                type="text"
-                placeholder="Filtrar por tipo"
-                value={filters.customerType}
-                onChange={(e) => setFilters({...filters, customerType: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Cumpleaños */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Cumpleaños
-              </label>
-              <input
-                type="date"
-                value={filters.birthday}
-                onChange={(e) => setFilters({...filters, birthday: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Redes sociales */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Redes sociales
-              </label>
-              <input
-                type="text"
-                placeholder="Buscar en redes sociales"
-                value={filters.socials}
-                onChange={(e) => setFilters({...filters, socials: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Limpiar filtros */}
-            <button
-              onClick={() => setFilters({
-                page: 1,
-                limit: 20,
-                search: '',
-                status: '',
-                tag: '',
-                city: '',
-                state: '',
-                country: '',
-                companyName: '',
-                position: '',
-                customerType: '',
-                birthday: '',
-                notes: '',
-                socials: ''
-              })}
-              className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-            >
-              Limpiar filtros
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Contenedor principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -423,6 +236,16 @@ const Contacts: React.FC = () => {
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filtros
+              </button>
+              
+              {/* Botón de filtros para desktop */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="hidden lg:flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                title={showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
               </button>
               
               <button 
@@ -462,29 +285,29 @@ const Contacts: React.FC = () => {
             <div className="p-6">
               {/* Tabla responsive */}
               <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="overflow-x-auto scrollbar-thin">
+                  <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">
                           Contacto
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">
                           Empresa
                         </th>
-                        <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">
                           Ubicación
                         </th>
-                        <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/12">
                           Tipo
                         </th>
-                        <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/12">
                           Estado
                         </th>
-                        <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">
                           Tags
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/12">
                           Acciones
                         </th>
                       </tr>
@@ -701,6 +524,210 @@ const Contacts: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Sidebar de filtros a la derecha */}
+      {showFilters && (
+        <div className="bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 fixed inset-0 z-40 w-80 right-0 lg:static lg:inset-auto lg:z-auto lg:h-full lg:flex lg:flex-col">
+          <div className="p-6 lg:flex-1 lg:overflow-y-auto">
+            {/* Header de filtros */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Filtros
+              </h2>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Ocultar filtros
+              </button>
+            </div>
+            
+            {/* Contenido de filtros */}
+            <div className="space-y-4">
+              {/* Búsqueda general */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Búsqueda general
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, teléfono, email..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({...filters, search: e.target.value})}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Estado */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Estado
+                </label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Todos</option>
+                  <option value="active">Activo</option>
+                  <option value="blocked">Bloqueado</option>
+                </select>
+              </div>
+
+              {/* Ciudad */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Ciudad
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por ciudad"
+                  value={filters.city}
+                  onChange={(e) => setFilters({...filters, city: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Provincia */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Provincia
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por provincia"
+                  value={filters.state}
+                  onChange={(e) => setFilters({...filters, state: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* País */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  País
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por país"
+                  value={filters.country}
+                  onChange={(e) => setFilters({...filters, country: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Empresa */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Empresa
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por empresa"
+                  value={filters.companyName}
+                  onChange={(e) => setFilters({...filters, companyName: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Cargo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Cargo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por cargo"
+                  value={filters.position}
+                  onChange={(e) => setFilters({...filters, position: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Tipo de cliente */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tipo de cliente
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar por tipo de cliente"
+                  value={filters.customerType}
+                  onChange={(e) => setFilters({...filters, customerType: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Fecha de nacimiento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Fecha de nacimiento
+                </label>
+                <input
+                  type="date"
+                  value={filters.birthday}
+                  onChange={(e) => setFilters({...filters, birthday: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Notas */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Notas
+                </label>
+                <input
+                  type="text"
+                  placeholder="Buscar en notas"
+                  value={filters.notes}
+                  onChange={(e) => setFilters({...filters, notes: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Redes sociales */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Redes sociales
+                </label>
+                <input
+                  type="text"
+                  placeholder="Buscar en redes sociales"
+                  value={filters.socials}
+                  onChange={(e) => setFilters({...filters, socials: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              {/* Limpiar filtros */}
+              <button
+                onClick={() => setFilters({
+                  page: 1,
+                  limit: 20,
+                  search: '',
+                  status: '',
+                  tag: '',
+                  city: '',
+                  state: '',
+                  country: '',
+                  companyName: '',
+                  position: '',
+                  customerType: '',
+                  birthday: '',
+                  notes: '',
+                  socials: ''
+                })}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modales */}
       {showCreateModal && (
@@ -1003,24 +1030,24 @@ const Contacts: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de nueva conversación */}
       <NewConversationModal
         isOpen={showNewConversationModal}
         onClose={() => setShowNewConversationModal(false)}
+        onCreate={handleCreateConversation}
+        contacts={contacts as any}
       />
 
-      {/* Modal de importación de contactos */}
       <ImportContactsModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onSuccess={handleImportSuccess}
+        onImport={handleImportContacts}
       />
 
-      {/* Modal de exportación de contactos */}
       <ExportContactsModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        currentFilters={filters}
+        onExport={handleExportContacts}
+        totalContacts={filteredContacts.length}
       />
 
       {/* Modal de ver contacto */}

@@ -35,6 +35,12 @@ import autoMessageScheduleRoutes from './routes/autoMessageSchedules';
 import botFlowRoutes from './routes/botFlows';
 import dashboardRoutes from './routes/dashboard';
 import conversationRoutes from './routes/conversations';
+import conversationAssignmentRoutes from './routes/conversationAssignment';
+import conversationHistoryRoutes from './routes/conversationHistory';
+import mediaRoutes from './routes/media';
+import messageTemplateRoutes from './routes/messageTemplates';
+import agentStatusRoutes from './routes/agentStatus';
+import whatsappConfigRoutes from './routes/whatsappConfig';
 
 // Middlewares de manejo de errores
 import { errorHandler } from './middleware/errorHandler';
@@ -90,7 +96,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(sanitizeInput);
 
 // Servir archivos estáticos
-app.use('/public', express.static('uploads'));
+app.use('/uploads', express.static('uploads'));
 
 // Health check endpoint - sin autenticación
 app.get('/api/health', (_req, res) => {
@@ -148,6 +154,12 @@ app.use('/api/auto-message-schedules', autoMessageScheduleRoutes);
 app.use('/api/bot-flows', botFlowRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/conversations', conversationRoutes);
+app.use('/api/conversation-assignments', conversationAssignmentRoutes);
+app.use('/api/conversation-history', conversationHistoryRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/message-templates', messageTemplateRoutes);
+app.use('/api/agent-status', agentStatusRoutes);
+app.use('/api/whatsapp-config', whatsappConfigRoutes);
 
 // Middlewares de manejo de errores
 app.use(notFoundHandler);
@@ -263,5 +275,16 @@ process.on('uncaughtException', (error) => {
 
 // Iniciar el servidor
 startServer();
+
+// Manejo de shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down server...');
+  
+  // Limpiar timers de auto-ausente
+  const AgentStatusService = require('./services/agentStatusService').default;
+  AgentStatusService.clearAllTimers();
+  
+  process.exit(0);
+});
 
 export default app; 

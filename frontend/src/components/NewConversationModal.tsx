@@ -1,89 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { X, MessageSquare } from 'lucide-react';
-
-import { contactService, Contact } from '../services/contactService';
-import { connectionService, Connection } from '../services/connectionService';
-import conversationService from '../services/conversationService';
+import { Contact } from '../types/api';
 
 interface NewConversationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCreate: (conversationData: { contactId: string; initialMessage: string }) => void;
+  contacts: Contact[];
 }
 
-const NewConversationModal: React.FC<NewConversationModalProps> = ({ isOpen, onClose }) => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [selectedContact, setSelectedContact] = useState<string>('');
-  const [selectedConnection, setSelectedConnection] = useState<string>('');
-  const [isCreating, setIsCreating] = useState(false);
-  const navigate = useNavigate();
+const NewConversationModal: React.FC<NewConversationModalProps> = ({
+  isOpen,
+  onClose,
+  onCreate,
+  contacts
+}) => {
+  const [selectedContactId, setSelectedContactId] = useState('');
+  const [initialMessage, setInitialMessage] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      // Cargar contactos y conexiones cuando se abre el modal
-      const fetchData = async () => {
-        try {
-          const contactsResponse = await contactService.getAll({ limit: 1000 }); // Cargar todos los contactos
-          const connectionsResponse = await connectionService.getAll();
-          setContacts(contactsResponse.data || []);
-          setConnections(connectionsResponse.data || []);
-        } catch (error) {
-          toast.error('Error al cargar datos para la conversación');
-          console.error(error);
-        }
-      };
-      fetchData();
+    if (contacts.length > 0 && !selectedContactId) {
+      setSelectedContactId(contacts[0].id);
     }
-  }, [isOpen]);
+  }, [contacts, selectedContactId]);
 
-  const handleCreateConversation = async () => {
-    if (!selectedContact || !selectedConnection) {
-      toast.error('Debes seleccionar un contacto y una conexión');
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      await conversationService.createConversation(selectedContact, selectedConnection);
-      toast.success('Conversación iniciada!');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedContactId) {
+      onCreate({
+        contactId: selectedContactId,
+        initialMessage
+      });
       onClose();
-      navigate('/conversations');
-    } catch (error) {
-      toast.error('Error al iniciar la conversación');
-      console.error(error);
-    } finally {
-      setIsCreating(false);
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nueva Conversación</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <X className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
-
-        <div className="space-y-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Nueva Conversación</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="contact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Contacto
             </label>
             <select
-              id="contact"
-              value={selectedContact}
-              onChange={(e) => setSelectedContact(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              value={selectedContactId}
+              onChange={(e) => setSelectedContactId(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              required
             >
-              <option value="">Selecciona un contacto</option>
+              <option value="">Seleccionar contacto</option>
               {contacts.map((contact) => (
                 <option key={contact.id} value={contact.id}>
                   {contact.name} ({contact.number})
@@ -91,42 +60,37 @@ const NewConversationModal: React.FC<NewConversationModalProps> = ({ isOpen, onC
               ))}
             </select>
           </div>
-
+          
           <div>
-            <label htmlFor="connection" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Conexión (Desde qué número enviar)
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mensaje Inicial (Opcional)
             </label>
-            <select
-              id="connection"
-              value={selectedConnection}
-              onChange={(e) => setSelectedConnection(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="">Selecciona una conexión</option>
-              {connections.map((connection) => (
-                <option key={connection.id} value={connection.id}>
-                  {connection.name}
-                </option>
-              ))}
-            </select>
+            <textarea
+              value={initialMessage}
+              onChange={(e) => setInitialMessage(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              rows={3}
+              placeholder="Escribe un mensaje inicial para la conversación..."
+            />
           </div>
-        </div>
-
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleCreateConversation}
-            disabled={isCreating}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
-          >
-            {isCreating ? 'Iniciando...' : <><MessageSquare className="w-4 h-4 mr-2" /> Iniciar Conversación</>}
-          </button>
-        </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={!selectedContactId}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Crear Conversación
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

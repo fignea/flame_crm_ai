@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Play, Pause, GitBranch } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { botFlowService, BotFlow } from '../services/botFlowService';
-import { connectionService, Connection } from '../services/connectionService';
 import BotFlowModal from '../components/BotFlowModal';
 import BotFlowEditor from '../components/BotFlowEditor';
 
@@ -11,14 +10,11 @@ const BotFlows: React.FC = () => {
   const [flows, setFlows] = useState<BotFlow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showEditor, setShowEditor] = useState(false);
   const [editingFlow, setEditingFlow] = useState<BotFlow | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadFlows();
-      loadConnections();
     }
   }, [isAuthenticated]);
 
@@ -34,16 +30,6 @@ const BotFlows: React.FC = () => {
     }
   };
 
-  const loadConnections = async () => {
-    try {
-      const response = await connectionService.getAll();
-      setConnections(response.data || []);
-    } catch (error) {
-      console.error('Error cargando conexiones:', error);
-      setConnections([]);
-    }
-  };
-
   const handleCreate = () => {
     setEditingFlow(null);
     setShowModal(true);
@@ -56,7 +42,8 @@ const BotFlows: React.FC = () => {
 
   const handleOpenEditor = (flow: BotFlow) => {
     setEditingFlow(flow);
-    setShowEditor(true);
+    // TODO: Implementar editor
+    // console.log(Abrir editor para:', flow.name);
   };
 
   const handleDelete = async (id: string) => {
@@ -90,11 +77,6 @@ const BotFlows: React.FC = () => {
   const handleModalSave = async () => {
     await loadFlows();
     handleModalClose();
-  };
-
-  const handleEditorClose = () => {
-    setShowEditor(false);
-    setEditingFlow(null);
   };
 
   if (loading) {
@@ -225,22 +207,18 @@ const BotFlows: React.FC = () => {
         )}
       </div>
 
-      {showModal && (
-        <BotFlowModal
-          flow={editingFlow}
-          connections={connections}
-          onClose={handleModalClose}
-          onSave={handleModalSave}
-        />
-      )}
+      <BotFlowModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSave={handleModalSave}
+        botFlow={editingFlow}
+      />
 
-      {showEditor && editingFlow && (
-        <BotFlowEditor
-          flow={editingFlow}
-          onClose={handleEditorClose}
-          onSave={handleEditorClose}
-        />
-      )}
+      <BotFlowEditor
+        botFlow={editingFlow}
+        onSave={handleModalSave}
+        onCancel={() => setEditingFlow(null)}
+      />
     </div>
   );
 };

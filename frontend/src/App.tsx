@@ -18,6 +18,7 @@ import Tags from './pages/Tags';
 import Schedules from './pages/Schedules';
 import BotFlows from './pages/BotFlows';
 import Users from './pages/Users';
+import Metrics from './pages/Metrics';
 import { Megaphone, ListTodo, BarChart2, FileText, HelpCircle } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import './styles/globals.css';
@@ -177,6 +178,12 @@ function App() {
                 <Layout>
                   <Connections />
                 </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/metrics" element={
+              <ProtectedRoute>
+                <Metrics />
               </ProtectedRoute>
             } />
             
